@@ -1,5 +1,5 @@
 """
-This ontains the functions related to the cartesian robot model
+This contains the functions related to the cartesian robot model
 """
 import control as ct
 from control.matlab import ss, bode
@@ -26,7 +26,7 @@ sysCR = ss(A,B,C,D)
 
 
 
-def forced_response(ssystem, timesteps_input, u_input, initial_state=[[0],[0],[0],[0]] ):
+def forced_response(ssystem, timesteps_input, u_input, initial_state=[[0],[0],[0],[0]]):
     """
     This function returns the output of a system (state space)
     given the inputs at certain timesteps and the initial condition
