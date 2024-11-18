@@ -41,7 +41,10 @@ def search_index_nextStep(data_counter, previous_counter):
     """
     When a circular buffer is read out, this function searches the data point following on the last processed point.
     """
-    index = data_counter.index(previous_counter+1)
+    try:
+        index = data_counter.index(previous_counter+1)
+    except:
+        index = data_counter.index(previous_counter+2)
     return index
 
 def select_useful_data(buffer_od, previous_counter):
