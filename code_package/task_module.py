@@ -1,7 +1,6 @@
 from ads_communication_module import read_twincat_variable,write_twincat_variable
 
 
-
 def fast_loop(period, event_f, lock, plc, fHandle):
     while not event_f.wait(period):
         with lock:

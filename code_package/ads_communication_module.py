@@ -37,7 +37,16 @@ def read_twincat_structure(plc, struct_name='Global.Buffer',
     ordered_dictionary = plc.read_structure_by_name(struct_name, struct_def)
     return ordered_dictionary
 
+def search_index_nextStep(data_counter, previous_counter):
+    """
+    When a circular buffer is read out, this function searches the data point following on the last processed point.
+    """
+    index = data_counter.index(previous_counter+1)
+    return index
 
+def select_useful_data(buffer_od, previous_counter):
+    sorted_od = buffer_od
+    return sorted_od
 
 if __name__ == "__main__":
     plc = pyads.Connection(AMSNETID, pyads.PORT_TC3PLC1)
