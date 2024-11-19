@@ -5,7 +5,7 @@ import time
 
 
 AMSNETID = "192.168.0.3.1.1" #local netid
-BufferSize = 10
+BufferSize = 100
 
 def write_twincat_variable(var_name_TC, var_python, plc):
     #plc = pyads.Connection(AMSNETID, pyads.PORT_TC3PLC1)
@@ -44,7 +44,11 @@ def search_index_nextStep(data_counter, previous_counter):
     try:
         index = data_counter.index(previous_counter+1)
     except:
-        index = data_counter.index(previous_counter+2)
+        try:
+            index = data_counter.index(previous_counter+2)
+        except:
+            index = 'NoIndexFound'
+            print('More than 1 data point is missing, the digital twin is of track')
     return index
 
 def select_useful_data(buffer_od, previous_counter):
@@ -54,26 +58,34 @@ def select_useful_data(buffer_od, previous_counter):
 if __name__ == "__main__":
     plc = pyads.Connection(AMSNETID, pyads.PORT_TC3PLC1)
     plc.open()
+    
 
     data = read_twincat_structure(plc)
-    print(data)
+    
+    
     plc.close()
     x = []
     tlist = []
 
-    """
-    for e in range(100):
+    plc.open()
+    for e in range(1000):
         start_time = time.time()
-        read_twincat_variable("MAIN.iCounter", plc)
+        
+    
+        ord_dir = read_twincat_structure(plc)
+    
+        
+
         x.append(e)
         tlist.append(time.time() - start_time)
     plc.close()
     print("done")
 
-    print(tlist)
+    #print(ord_dir)
 
-    plt.figure(1)
-    plt.hist([1,2,3],[1,2,3])
-    print("graph")
-    plt.show
-    """
+    
+    plt.hist(tlist, 5)
+    plt.xlabel('reading time')
+    plt.ylabel('amount')
+    plt.show()
+    
