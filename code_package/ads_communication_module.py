@@ -6,7 +6,7 @@ import time
 
 
 AMSNETID = "192.168.0.3.1.1" #local netid
-BufferSize = 100
+BufferSize = 10
 
 def write_twincat_variable(var_name_TC, var_python, plc):
     #plc = pyads.Connection(AMSNETID, pyads.PORT_TC3PLC1)
@@ -74,8 +74,14 @@ def put_array_chronologically(data_array, index_first, index_last):
     return sorted
 
 def select_useful_data(buffer_od, previous_counter):
-    sorted_od = buffer_od
-    return sorted_od
+    counters = buffer_od['aDataCounter']
+
+    index_start = search_index_nextStep(counters, previous_counter)
+    index_end = search_index_lastStep(counters)
+    for varname, array in buffer_od.items():
+        array_useful = put_array_chronologically(array, index_start, index_end)
+        buffer_od[varname] = array_useful
+    return buffer_od
 
 if __name__ == "__main__":
     print('running')
@@ -87,39 +93,47 @@ if __name__ == "__main__":
         plc.open()
         buffer_od = read_twincat_structure(plc)
         plc.close()
-       #print(buffer)
-        last_counter = 8
+        print(buffer_od)
+        last_counter = 37
         array_of_counters = np.array(buffer_od['aDataCounter'])
         starting_index = search_index_nextStep(array_of_counters,last_counter)
+        last_index = search_index_lastStep(array_of_counters)
         print(starting_index)
-        
+        print(last_index)
+        sorted_array = put_array_chronologically(array_of_counters, starting_index, last_index)
+        print(sorted_array)
+
+        array_of_time = buffer_od['aTime']
+        print(array_of_time)
+        sorted_time = put_array_chronologically(array_of_time, starting_index, last_index)
+        print(f'this is the time array sorted: {sorted_time}')
 
 
 
-    """
-    HISTOGRAM OF TIME TO READ BUFFER (100x[counter,time,torque,angle])
-    x = []
-    tlist = []
+ 
+    # HISTOGRAM OF TIME TO READ BUFFER (100x[counter,time,torque,angle])
+    # x = []
+    # tlist = []
 
-    plc.open()
-    for e in range(1000):
-        start_time = time.time()
+    # plc.open()
+    # for e in range(1000):
+    #     start_time = time.time()
         
     
-        ord_dir = read_twincat_structure(plc)
+    #     ord_dir = read_twincat_structure(plc)
     
         
 
-        x.append(e)
-        tlist.append(time.time() - start_time)
-    plc.close()
-    print("done")
+    #     x.append(e)
+    #     tlist.append(time.time() - start_time)
+    # plc.close()
+    # print("done")
 
-    #print(ord_dir)
+    # #print(ord_dir)
 
     
-    plt.hist(tlist, 5)
-    plt.xlabel('reading time')
-    plt.ylabel('amount')
-    plt.show()
-    """
+    # plt.hist(tlist, 5)
+    # plt.xlabel('reading time')
+    # plt.ylabel('amount')
+    # plt.show()
+
