@@ -14,13 +14,23 @@ fric_x = 0.1
 fric_T = 0.1
 
 
-A = [[0,0,1,0], [-K/m, -(bs+fric_x)/m, K*R/m, bs*R/m], [0,0,0,1], [K*R/J,bs*R/J, -K*R*R/J,-(bs*R*R+fric_T)/J]]
+# A = [[0,0,1,0], [-K/m, -(bs+fric_x)/m, K*R/m, bs*R/m], [0,0,0,1], [K*R/J,bs*R/J, -K*R*R/J,-(bs*R*R+fric_T)/J]]
 
-B = [[0],[0],[0],[1/J]]
+# B = [[0],[0],[0],[1/J]]
 
-C = [1,0,0,0]
+# C = [1,0,0,0]
 
-D = 0
+# D = 0
+
+# sysCR = ss(A,B,C,D)
+
+A = np.array([[0,0,1,0], [0,0,0,1], [-K/m, K*R/m, -fric_x/m, 0], [K*R/J, -K*R*R/J, 0, -fric_T/J]])
+
+B = np.array([[0],[0],[0],[1/J]])
+
+C = np.array([0,1,0,0])
+
+D = np.array([0])
 
 sysCR = ss(A,B,C,D)
 

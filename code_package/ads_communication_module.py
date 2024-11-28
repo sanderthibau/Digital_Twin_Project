@@ -6,7 +6,7 @@ import time
 
 
 AMSNETID = "192.168.0.3.1.1" #local netid
-BufferSize = 10
+BufferSize = 100
 
 def write_twincat_variable(var_name_TC, var_python, plc):
     #plc = pyads.Connection(AMSNETID, pyads.PORT_TC3PLC1)
@@ -78,6 +78,7 @@ def select_useful_data(buffer_od, previous_counter):
 
     index_start = search_index_nextStep(counters, previous_counter)
     index_end = search_index_lastStep(counters)
+
     for varname, array in buffer_od.items():
         array_useful = put_array_chronologically(array, index_start, index_end)
         buffer_od[varname] = array_useful
@@ -89,24 +90,66 @@ if __name__ == "__main__":
 
     testing = 1
     if testing == 1:
+        import csv
         plc = pyads.Connection(AMSNETID, pyads.PORT_TC3PLC1)
         plc.open()
         buffer_od = read_twincat_structure(plc)
         plc.close()
-        print(buffer_od)
-        last_counter = 37
-        array_of_counters = np.array(buffer_od['aDataCounter'])
-        starting_index = search_index_nextStep(array_of_counters,last_counter)
-        last_index = search_index_lastStep(array_of_counters)
-        print(starting_index)
-        print(last_index)
-        sorted_array = put_array_chronologically(array_of_counters, starting_index, last_index)
-        print(sorted_array)
 
-        array_of_time = buffer_od['aTime']
-        print(array_of_time)
-        sorted_time = put_array_chronologically(array_of_time, starting_index, last_index)
-        print(f'this is the time array sorted: {sorted_time}')
+        array_of_counters = np.array(buffer_od['aDataCounter'])
+        print(array_of_counters)
+        last_counter = np.min(array_of_counters)
+
+        sorted_buffer = select_useful_data(buffer_od,last_counter)
+        array_of_counters = sorted_buffer['aDataCounter']
+        print(sorted_buffer)
+
+        new_csv = 0
+
+        if new_csv == 1:
+            with open("database.csv", "w", newline='') as outfile:
+                csvwriter = csv.writer(outfile)
+                csvwriter.writerow(sorted_buffer)
+        start = time.perf_counter()
+        with open("database.csv", "a", newline='') as outfile:
+                csvwriter = csv.writer(outfile)
+                len_buffer = len(sorted_buffer['aDataCounter'])
+                for i in range(len_buffer):
+                    csvwriter.writerow([sorted_buffer[key][i] for key in sorted_buffer])
+        stop = time.perf_counter()
+        print(stop-start)
+
+        update_buffer = 1
+        if update_buffer == 1:
+            
+            with open("databuffer.csv", "w", newline='') as outfile:
+                csvwriter = csv.writer(outfile)
+                csvwriter.writerow(sorted_buffer)
+
+                len_buffer = len(sorted_buffer['aDataCounter'])
+                for i in range(len_buffer):
+                    csvwriter.writerow([sorted_buffer[key][i] for key in sorted_buffer])
+
+
+
+
+
+
+        # print(buffer_od)
+        
+        # array_of_counters = np.array(buffer_od['aDataCounter'])
+        # last_counter = np.min(array_of_counters)
+        # starting_index = search_index_nextStep(array_of_counters,last_counter)
+        # last_index = search_index_lastStep(array_of_counters)
+        # print(starting_index)
+        # print(last_index)
+        # sorted_array = put_array_chronologically(array_of_counters, starting_index, last_index)
+        # print(sorted_array)
+
+        # array_of_time = buffer_od['aTime']
+        # print(array_of_time)
+        # sorted_time = put_array_chronologically(array_of_time, starting_index, last_index)
+        # print(f'this is the time array sorted: {sorted_time}')
 
 
 
