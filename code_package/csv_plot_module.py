@@ -43,7 +43,7 @@ def create_dict_HeadersAndData(headers, buffer_array):
 
 
 
-def initiate_plot(rows=1, cols=2, labels=('input torque', 'sensor angle'), ylabels=('Input [T]','Sensor [rad]'), ylimits=([-20,20],[-0.2, 0.5])):
+def initiate_plot(rows=2, cols=1, labels=('input torque', 'sensor angle'), ylabels=('Input [T]','Sensor [rad]'), ylimits=((-20,20),(-0.01, 0.31))):
     fig, axs = plt.subplots(nrows=rows, ncols=cols, layout='constrained')
     i = 0
     lines = []
@@ -55,7 +55,7 @@ def initiate_plot(rows=1, cols=2, labels=('input torque', 'sensor angle'), ylabe
          lines.append(line)
 
          ax.set_xlabel('Time [s]')
-         ax.set_xlim([0,10])
+         ax.set_xlim((0,10))
          ax.set_xticklabels([])
 
          ax.legend()
@@ -63,103 +63,58 @@ def initiate_plot(rows=1, cols=2, labels=('input torque', 'sensor angle'), ylabe
          i += 1
     return fig, axs, lines
 
+def gen_data(n=10):
+    i = gen_data.i
+    t = gen_data.t
+    data = gen_data.data
+    i=i+1
+    t+=1
+    time = [t * e for e in range(10)]
+    print(i)
+    
+    if i == 3:
+         data_step = data[(i-1)*n:]
+         
+         data = [0.01*i for i in range(3*n)]
+         i = 0
+    else:
+        data_step = data[(i-1)*n:i*n]
+
+    yield time, data_step
 
 
 
 
 
-
-
+gen_data.i = 0
+gen_data.t = 0
+gen_data.data = [0.1 for i in range(30)]
 
 if __name__ == "__main__":
 
-    # def data_gen():
-    #     t = data_gen.t
-    #     cnt = 0
-    #     while cnt < 1000:
-    #         cnt+=1
-    #         t += 0.05
-    #         y1 = np.sin(2*np.pi*t) * np.exp(-t/10.)
-    #         y2 = np.cos(2*np.pi*t) * np.exp(-t/10.)
-    #         # adapted the data generator to yield both sin and cos
-    #         yield t, y1, y2
+    fig,a,lines=initiate_plot()
 
-    # data_gen.t = 0
-
-    # # create a figure with two subplots
-    # fig, (ax1, ax2) = plt.subplots(2,1)
-
-    # # intialize two line objects (one in each axes)
-    # line1, = ax1.plot([], [], lw=2)
-    # line2, = ax2.plot([], [], lw=2, color='r')
-    # line = [line1, line2]
-
-    # # the same axes initalizations as before (just now we do it for both of them)
-    # for ax in [ax1, ax2]:
-    #     ax.set_ylim(-1.1, 1.1)
-    #     ax.set_xlim(0, 5)
-    #     ax.grid()
-
-    # # initialize the data arrays 
-    # xdata, y1data, y2data = [], [], []
-    # def run(data):
-    #     # update the data
-    #     t, y1, y2 = data
-    #     xdata.append(t)
-    #     y1data.append(y1)
-    #     y2data.append(y2)
-
-    #     # axis limits checking. Same as before, just for both axes
-    #     for ax in [ax1, ax2]:
-    #         xmin, xmax = ax.get_xlim()
-    #         if t >= xmax:
-    #             ax.set_xlim(xmin, 2*xmax)
-    #             ax.figure.canvas.draw()
-
-    #     # update the data of both line objects
-    #     line[0].set_data(xdata, y1data)
-    #     line[1].set_data(xdata, y2data)
-
-    #     return line
-
-    # ani = animation.FuncAnimation(fig, run, blit=True, interval=10, repeat=False)
-    # plt.show()
-    
-    rows=1
-    cols=2
-    labels=('input torque', 'sensor angle')
-    ylabels=('Input [T]','Sensor [rad]')
-    ylimits=((-20,20),(-0.01, 0.31))
-
-    fig, axs = plt.subplots(nrows=rows, ncols=cols, layout='constrained')
-    i = 0
-    lines = []
-    for ax in axs:
-         ax.set_ylabel(ylabels[i])
-         ax.set_ylim(ylimits[i])
-
-         line, = ax.plot([], [], label=labels[i])
-         lines.append(line)
-
-         ax.set_xlabel('Time [s]')
-         ax.set_xlim(0,300)
-         ax.set_xticklabels([])
-
-         ax.legend()
-
-         i += 1
-
-
-    def animate(iter, keys=('aInputTorque','aSensorAngle')):
+    plot_array = []
+    time_array = []
+    def animate(gen_data, n_plot=500, n_step=10 , keys=('aInputTorque','aSensorAngle')):
      
         headers = read_csvHeader('databuffer.csv')
         data =  read_csvData('databuffer.csv')
 
         dict_data = create_dict_HeadersAndData(headers, data)
 
+        t, new_data = gen_data
+        print(new_data)
+        print(t)
+        time_array.append(t)
+        plot_array.append(new_data)
 
         for i in range(len(lines)):
-            lines[i].set_data(dict_data['aDataCounter'][-50:iter], dict_data[keys[i]][-50:iter])
+             lines[i].set_data(time_array,plot_array)
+
+
+
+            #lines[i].set_data(dict_data['aDataCounter'][-50:iter], dict_data[keys[i]][-50:iter])
             
 
         
@@ -168,7 +123,7 @@ if __name__ == "__main__":
 
 
 
-    ani = animation.FuncAnimation(fig=fig, func=animate, blit=True, interval=1)
+    ani = animation.FuncAnimation(fig=fig, func=animate,frames=gen_data(), blit=True, interval=1)
     plt.show()
 
 
