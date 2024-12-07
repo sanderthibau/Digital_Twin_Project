@@ -67,7 +67,7 @@ def gen_data(n=10):
     i = gen_data.i
     t = gen_data.t
     data = gen_data.data
-    i=i+1
+    i+=1
     t+=1
     time = [t * e for e in range(10)]
     print(i)
@@ -77,10 +77,10 @@ def gen_data(n=10):
          
          data = [0.01*i for i in range(3*n)]
          i = 0
+         yield time, data_step
     else:
         data_step = data[(i-1)*n:i*n]
-
-    yield time, data_step
+        yield time, data_step
 
 
 
@@ -99,9 +99,9 @@ if __name__ == "__main__":
     def animate(gen_data, n_plot=500, n_step=10 , keys=('aInputTorque','aSensorAngle')):
      
         headers = read_csvHeader('databuffer.csv')
-        data =  read_csvData('databuffer.csv')
+        data1 =  read_csvData('databuffer.csv')
 
-        dict_data = create_dict_HeadersAndData(headers, data)
+        dict_data = create_dict_HeadersAndData(headers, data1)
 
         t, new_data = gen_data
         print(new_data)
@@ -123,7 +123,7 @@ if __name__ == "__main__":
 
 
 
-    ani = animation.FuncAnimation(fig=fig, func=animate,frames=gen_data(), blit=True, interval=1)
+    ani = animation.FuncAnimation(fig=fig, func=animate,frames=gen_data, blit=True, interval=1)
     plt.show()
 
 
