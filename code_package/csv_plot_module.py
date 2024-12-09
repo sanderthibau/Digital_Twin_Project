@@ -43,14 +43,16 @@ def create_dict_HeadersAndData(headers, buffer_array):
 
 
 
-def initiate_plot(rows=2, cols=1, labels=('input torque', 'sensor angle'), ylabels=('Input [T]','Sensor [rad]'), ylimits=((-20,20),(-0.01, 0.31))):
+def initiate_plot(rows=2, cols=1, n_plot=500, labels=('aInputTorque','aSensorAngle'), ylabels=('Input [T]','Sensor [rad]'), ylimits=((-20,20),(-0.01, 0.31))):
     fig, axs = plt.subplots(nrows=rows, ncols=cols, layout='constrained')
     i = 0
+    plot_arrays = np.full((len(labels)+1,n_plot), np.nan)
+    
     lines = []
     for ax in axs:
          ax.set_ylabel(ylabels[i])
          ax.set_ylim(ylimits[i])
-
+         
          line, = ax.plot([], [], label=labels[i])
          lines.append(line)
 
@@ -61,69 +63,75 @@ def initiate_plot(rows=2, cols=1, labels=('input torque', 'sensor angle'), ylabe
          ax.legend()
 
          i += 1
-    return fig, axs, lines
-
-def gen_data(n=10):
-    i = gen_data.i
-    t = gen_data.t
-    data = gen_data.data
-    i+=1
-    t+=1
-    time = [t * e for e in range(10)]
-    print(i)
-    
-    if i == 3:
-         data_step = data[(i-1)*n:]
-         
-         data = [0.01*i for i in range(3*n)]
-         i = 0
-         yield time, data_step
-    else:
-        data_step = data[(i-1)*n:i*n]
-        yield time, data_step
+    return fig, axs, lines, plot_arrays
 
 
 
 
 
-gen_data.i = 0
-gen_data.t = 0
-gen_data.data = [0.1 for i in range(30)]
 
 if __name__ == "__main__":
 
-    fig,a,lines=initiate_plot()
+    fig,a,lines, plot_arrays=initiate_plot()
 
-    plot_array = []
-    time_array = []
-    def animate(gen_data, n_plot=500, n_step=10 , keys=('aInputTorque','aSensorAngle')):
-     
-        headers = read_csvHeader('databuffer.csv')
-        data1 =  read_csvData('databuffer.csv')
+    dict_data = None
 
-        dict_data = create_dict_HeadersAndData(headers, data1)
+    def animate(iter, dict_data, n_plot=500, n_step=10 , keys=('aInputTorque','aSensorAngle')):
+        iter += 1
+        print(iter)
+        # update data from data base
+        if iter == 1:
+            headers = read_csvHeader('databuffer.csv')
+            data =  read_csvData('databuffer.csv')
+            dict_data = create_dict_HeadersAndData(headers, data)
+            
+            
+            
+            
 
-        t, new_data = gen_data
-        print(new_data)
-        print(t)
-        time_array.append(t)
-        plot_array.append(new_data)
+        buffer_length = dict_data['aTime'].shape[0]
+        step_amount = np.around(buffer_length/n_step)
+        plotstep_dict = {}
 
+        if iter == step_amount:
+
+            for key in keys:
+                plotstep_dict[key] = dict_data[key][(iter-1)*n_step:]
+                plotstep_dict['aTime'] = dict_data['aTime'][(iter-1)*n_step:]
+            iter = 0
+
+        else:
+            for key in keys:
+                plotstep_dict[key] = dict_data[key][(iter-1)*n_step:iter*n_step]
+                plotstep_dict['aTime'] = dict_data['aTime'][(iter-1)*n_step:iter*n_step]
+            
+
+        # set data on line object
+        plot_arrays[0,:] = np.concatenate((plot_arrays[0,:],plotstep_dict['aTime']))[-n_plot:]
+        print(plotstep_dict['aTime'])
         for i in range(len(lines)):
-             lines[i].set_data(time_array,plot_array)
+             lines[i].set_data(plot_arrays[0,:], plot_arrays[i,:])
 
 
 
             #lines[i].set_data(dict_data['aDataCounter'][-50:iter], dict_data[keys[i]][-50:iter])
+        """
+
+        # rescale axes
+        rescale = False
+
+        for ax, y, t in zip(axs, ydata, tdata):
+             if y < ax.get_ylimit()[0]:
+                  ax.set_limits(y, ax.get_limit()[1])
             
 
+        """
         
-
         return lines
 
 
 
-    ani = animation.FuncAnimation(fig=fig, func=animate,frames=gen_data, blit=True, interval=1)
+    ani = animation.FuncAnimation(fig=fig, func=animate, fargs=(dict_data,), blit=True, interval=1000, repeat=False)
     plt.show()
 
 
@@ -139,6 +147,7 @@ if __name__ == "__main__":
         data = read_csvData(filename)
 
         dictionary = create_dict_HeadersAndData(head, data)
+
 
 
         #data = np.genfromtxt('database.csv', delimiter=', ', dtype= float) #[('aDataCounter', int), ('aTime', int), ('aInputTorque', float), ('aSensorAngle', float)], names=True)
