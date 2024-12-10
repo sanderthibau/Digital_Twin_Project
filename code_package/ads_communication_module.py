@@ -91,16 +91,23 @@ if __name__ == "__main__":
     testing = 1
     if testing == 1:
         import csv
+        
         plc = pyads.Connection(AMSNETID, pyads.PORT_TC3PLC1)
         plc.open()
+        start = time.perf_counter()
         buffer_od = read_twincat_structure(plc)
+        stop = time.perf_counter()
         plc.close()
-
+        
+        print(stop-start)
         array_of_counters = np.array(buffer_od['aDataCounter'])
         print(array_of_counters)
         last_counter = np.min(array_of_counters)
 
+        start = time.perf_counter()
         sorted_buffer = select_useful_data(buffer_od,last_counter)
+        stop = time.perf_counter()
+        print(stop-start)
         array_of_counters = sorted_buffer['aDataCounter']
         print(sorted_buffer)
 

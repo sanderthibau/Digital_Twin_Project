@@ -43,7 +43,7 @@ def create_dict_HeadersAndData(headers, buffer_array):
 
 
 
-def initiate_plot(rows=2, cols=1, n_plot=500, labels=('aInputTorque','aSensorAngle'), ylabels=('Input [T]','Sensor [rad]'), ylimits=((-20,20),(-0.01, 0.31))):
+def initiate_plot(rows=2, cols=1, n_plot=101, labels=('aInputTorque','aSensorAngle'), ylabels=('Input [T]','Sensor [rad]'), ylimits=((-20,20),(-0.01, 0.31))):
     fig, axs = plt.subplots(nrows=rows, ncols=cols, layout='constrained')
     i = 0
     plot_arrays = np.full((len(labels)+1,n_plot), np.nan)
@@ -57,7 +57,7 @@ def initiate_plot(rows=2, cols=1, n_plot=500, labels=('aInputTorque','aSensorAng
          lines.append(line)
 
          ax.set_xlabel('Time [s]')
-         ax.set_xlim((0,10))
+         ax.set_xlim((0,1000))
          ax.set_xticklabels([])
 
          ax.legend()
@@ -72,66 +72,66 @@ def initiate_plot(rows=2, cols=1, n_plot=500, labels=('aInputTorque','aSensorAng
 
 if __name__ == "__main__":
 
-    fig,a,lines, plot_arrays=initiate_plot()
+    fig,axs,lines, plot_arrays=initiate_plot()
 
-    dict_data = None
+    
 
-    def animate(iter, dict_data, n_plot=500, n_step=10 , keys=('aInputTorque','aSensorAngle')):
-        iter += 1
-        print(iter)
+    def animate(iter, n_plot=101, n_step=10 , keys=('aInputTorque','aSensorAngle')):
+        
+        
         # update data from data base
-        if iter == 1:
-            headers = read_csvHeader('databuffer.csv')
-            data =  read_csvData('databuffer.csv')
-            dict_data = create_dict_HeadersAndData(headers, data)
+        
+        start = time.perf_counter()
+        headers = read_csvHeader('databuffer.csv')
+        data =  read_csvData('databuffer.csv')
+        plotstep_dict = create_dict_HeadersAndData(headers, data)
+        stop = time.perf_counter()
+        print(stop-start)
             
-            
-            
-            
-
-        buffer_length = dict_data['aTime'].shape[0]
+        buffer_length = plotstep_dict['aTime'].shape[0]
         step_amount = np.around(buffer_length/n_step)
-        plotstep_dict = {}
+        print(step_amount)
 
-        if iter == step_amount:
 
-            for key in keys:
-                plotstep_dict[key] = dict_data[key][(iter-1)*n_step:]
-                plotstep_dict['aTime'] = dict_data['aTime'][(iter-1)*n_step:]
-            iter = 0
+        
 
-        else:
-            for key in keys:
-                plotstep_dict[key] = dict_data[key][(iter-1)*n_step:iter*n_step]
-                plotstep_dict['aTime'] = dict_data['aTime'][(iter-1)*n_step:iter*n_step]
-            
 
         # set data on line object
-        plot_arrays[0,:] = np.concatenate((plot_arrays[0,:],plotstep_dict['aTime']))[-n_plot:]
-        print(plotstep_dict['aTime'])
-        for i in range(len(lines)):
-             lines[i].set_data(plot_arrays[0,:], plot_arrays[i,:])
+        print(plot_arrays[0,-1])
+        print(plotstep_dict['aDataCounter'])
+        print(np.isnan(plot_arrays[0,-1]))
+
+
+        if plot_arrays[0,-1] != plotstep_dict['aDataCounter'][-1] or np.isnan(plot_arrays[0,-1]):
+            print('in')
+            plot_arrays[0,:] = np.concatenate((plot_arrays[0,:],plotstep_dict['aDataCounter']))[-n_plot:]
+        
+
+
+            for i in range(len(lines)):
+                plot_arrays[i+1,:] = np.concatenate((plot_arrays[i+1,:],plotstep_dict[keys[i]]))[-n_plot:]
+                lines[i].set_data(plot_arrays[0,:], plot_arrays[i+1,:])
 
 
 
             #lines[i].set_data(dict_data['aDataCounter'][-50:iter], dict_data[keys[i]][-50:iter])
-        """
+        
 
         # rescale axes
         rescale = False
 
-        for ax, y, t in zip(axs, ydata, tdata):
-             if y < ax.get_ylimit()[0]:
-                  ax.set_limits(y, ax.get_limit()[1])
+        # for ax, y, t in zip(axs, ydata, tdata):
+        #      if y < ax.get_ylimit()[0]:
+        #           ax.set_limits(y, ax.get_limit()[1])
             
 
-        """
+        
         
         return lines
 
 
 
-    ani = animation.FuncAnimation(fig=fig, func=animate, fargs=(dict_data,), blit=True, interval=1000, repeat=False)
+    ani = animation.FuncAnimation(fig=fig, func=animate, blit=True, interval=1000, repeat=False)
     plt.show()
 
 
@@ -190,4 +190,16 @@ if __name__ == "__main__":
         #plt.plot(buffer_array[:,0]/100,buffer_array[:,3]*100)
         #plt.show()
 
+# if iter == step_amount:
+
+        #     for key in keys:
+        #         plotstep_dict[key] = dict_data[key][(iter)*n_step:]
+        #         plotstep_dict['aTime'] = dict_data['aTime'][(iter)*n_step:]
+        #     iter = 0
+
+        # else:
+        #     for key in keys:
+        #         plotstep_dict[key] = dict_data[key][(iter)*n_step:(iter+1)*n_step]
+        #         plotstep_dict['aTime'] = dict_data['aTime'][(iter)*n_step:(iter+1)*n_step]
+            
 
