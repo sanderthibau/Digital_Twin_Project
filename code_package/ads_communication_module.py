@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pyads
 import time
+import csv
 
 
 
@@ -50,7 +51,7 @@ def search_index_nextStep(data_counter, previous_counter, max_missing=1):
         try:
             index = np.where((data_counter<previous_counter+2+max_missing)&(data_counter>previous_counter))[0][0]
         except:
-            index = np.where((data_counter>=previous_counter))[0][0]
+            index = np.argmin(np.where(data_counter>=previous_counter, data_counter, 10**12))
             message = f'More than {max_missing} data point is missing. The digital twin is off track'
             if data_counter[index] == previous_counter:
                 message = 'The buffer is not updated yet. No new values detected.'
@@ -78,7 +79,6 @@ def put_array_chronologically(data_array, index_first, index_last):
 
 def select_useful_data(buffer_od, previous_counter):
     counters = buffer_od['aDataCounter']
-
     index_start = search_index_nextStep(counters, previous_counter)
     index_end = search_index_lastStep(counters)
 
@@ -104,13 +104,18 @@ def write_to_database(database_file, sorted_buffer):
     
 
 def write_buffer(buffer_file, sorted_buffer):
+    
     with open(buffer_file, "w", newline='') as outfile:
+        
         csvwriter = csv.writer(outfile)
+        
         csvwriter.writerow(sorted_buffer)
-
+        
         len_buffer = len(sorted_buffer['aDataCounter'])
         for i in range(len_buffer):
             csvwriter.writerow([sorted_buffer[key][i] for key in sorted_buffer])
+
+    
     
     
 

@@ -4,7 +4,7 @@ from ads_communication_module import search_index_nextStep, search_index_lastSte
 from csv_plot_module import create_dict_HeadersAndData
 import numpy as np
 from collections import OrderedDict
-
+import time
 
 
 #@pytest.mark.parametrize("lastCounter,nextIndex", [(1, 3), (2, 4), (0, 3), (-1, 'NoIndexFound')])
@@ -45,7 +45,7 @@ def test_select_useful_data():
 
 test_time = 0
 if test_time == 1:
-    import time
+    
 
     listA = [*range(50,500,1)] + [*range(3,50,1)]
     starting_time = time.time()
@@ -53,3 +53,21 @@ if test_time == 1:
         search_index_nextStep(listA, e-1)
     print(time.time()-starting_time)
     print(listA)
+
+test_coondition = 1
+if test_coondition:
+    previous_counter = 50
+    arr = np.array([e for e in range(190)])
+
+    start = time.perf_counter()
+
+    cond = arr>=previous_counter
+    index = np.argmin(cond*arr)
+    
+    stop1 = time.perf_counter()
+
+    x = np.argmin(np.where(cond, arr, 10**12))
+
+    stop2 = time.perf_counter()
+
+    print(f'conditon time: {stop1-start} s, where time: {stop2-start} s, solution: {x}')

@@ -1,25 +1,18 @@
-import csv
+
 from ads_communication_module import read_twincat_structure,write_twincat_variable, select_useful_data, write_buffer
 
-last_counter = 0
+
 def fast_loop(period, event_f, lock, plc, fHandle):
+    last_counter = 0
     while not event_f.wait(period):
         with lock:
             buffer_dict = read_twincat_structure(plc)
-            #print(var)
-        
+            
+        print(last_counter)
         sorted_buffer = select_useful_data(buffer_dict, last_counter)
-        
+        last_counter = sorted_buffer['aDataCounter'][-1]
         write_buffer('databuffer.csv', sorted_buffer)
-        database_file = 'databuffer.csv'
-
-        with open(database_file, "w", newline='') as outfile:
-            csvwriter = csv.writer(outfile)
-            csvwriter.writerow(sorted_buffer)
-
-            len_buffer = len(sorted_buffer['aDataCounter'])
-            for i in range(len_buffer):
-                csvwriter.writerow([sorted_buffer[key][i] for key in sorted_buffer])
+        
         print('fast')
         
 
