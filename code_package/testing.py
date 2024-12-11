@@ -14,7 +14,7 @@ def test_search_index_nextStep():
     assert search_index_nextStep(a, 1) == 3
     assert search_index_nextStep(a, 2) == 4
     assert search_index_nextStep(a, 0) == 3
-    assert search_index_nextStep(a, -1) == 'NoIndexFound'
+    assert search_index_nextStep(a, -1) == 3
     missing = 2
     assert search_index_nextStep(a, -1, missing) == 3
 

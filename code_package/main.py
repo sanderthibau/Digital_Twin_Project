@@ -26,10 +26,10 @@ if __name__ == "__main__":
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
 
-        pool.submit(fast_loop, 0.50, event, lock, plc, "MAIN.iCounter")
+        pool.submit(fast_loop, 1, event, lock, plc, "MAIN.iCounter")
         pool.submit(slow_loop, 5, event, lock, plc)
 
-        time.sleep(10)
+        time.sleep(20)
         event.set()
 
     #plc.release_handle(fHandle)

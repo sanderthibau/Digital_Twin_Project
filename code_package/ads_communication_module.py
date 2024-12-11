@@ -50,8 +50,11 @@ def search_index_nextStep(data_counter, previous_counter, max_missing=1):
         try:
             index = np.where((data_counter<previous_counter+2+max_missing)&(data_counter>previous_counter))[0][0]
         except:
-            index = 'NoIndexFound'
-            print('More than 1 data point is missing, the digital twin is off track')
+            index = np.where((data_counter>=previous_counter))[0][0]
+            message = f'More than {max_missing} data point is missing. The digital twin is off track'
+            if data_counter[index] == previous_counter:
+                message = 'The buffer is not updated yet. No new values detected.'
+            print(message)
         
     return index
 def search_index_lastStep(data_counter):
@@ -84,6 +87,33 @@ def select_useful_data(buffer_od, previous_counter):
         buffer_od[varname] = array_useful
     return buffer_od
 
+
+def start_new_database(database_file, sorted_buffer):
+    with open(database_file, "w", newline='') as outfile:
+            csvwriter = csv.writer(outfile)
+            csvwriter.writerow(sorted_buffer)
+
+
+
+def write_to_database(database_file, sorted_buffer):
+    with open(database_file, "a", newline='') as outfile:
+        csvwriter = csv.writer(outfile)
+        len_buffer = len(sorted_buffer['aDataCounter'])
+        for i in range(len_buffer):
+            csvwriter.writerow([sorted_buffer[key][i] for key in sorted_buffer])
+    
+
+def write_buffer(buffer_file, sorted_buffer):
+    with open(buffer_file, "w", newline='') as outfile:
+        csvwriter = csv.writer(outfile)
+        csvwriter.writerow(sorted_buffer)
+
+        len_buffer = len(sorted_buffer['aDataCounter'])
+        for i in range(len_buffer):
+            csvwriter.writerow([sorted_buffer[key][i] for key in sorted_buffer])
+    
+    
+
 if __name__ == "__main__":
     print('running')
 
@@ -111,31 +141,27 @@ if __name__ == "__main__":
         array_of_counters = sorted_buffer['aDataCounter']
         print(sorted_buffer)
 
-        new_csv = 0
+        
 
+        
+        
+        new_csv = 0
         if new_csv == 1:
-            with open("database.csv", "w", newline='') as outfile:
-                csvwriter = csv.writer(outfile)
-                csvwriter.writerow(sorted_buffer)
+            start_new_database('database.csv', sorted_buffer)
+
         start = time.perf_counter()
-        with open("database.csv", "a", newline='') as outfile:
-                csvwriter = csv.writer(outfile)
-                len_buffer = len(sorted_buffer['aDataCounter'])
-                for i in range(len_buffer):
-                    csvwriter.writerow([sorted_buffer[key][i] for key in sorted_buffer])
+
+        write = 1
+        if write == 1:
+            write_to_database('database.csv', sorted_buffer)
+        
         stop = time.perf_counter()
         print(stop-start)
 
         update_buffer = 1
         if update_buffer == 1:
+            write_buffer('databuffer.csv', sorted_buffer)
             
-            with open("databuffer.csv", "w", newline='') as outfile:
-                csvwriter = csv.writer(outfile)
-                csvwriter.writerow(sorted_buffer)
-
-                len_buffer = len(sorted_buffer['aDataCounter'])
-                for i in range(len_buffer):
-                    csvwriter.writerow([sorted_buffer[key][i] for key in sorted_buffer])
 
 
 

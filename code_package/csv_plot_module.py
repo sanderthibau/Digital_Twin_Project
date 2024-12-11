@@ -22,16 +22,16 @@ def read_csvHeader(csvFile):
                break
     return headers
 
-def read_csvData(csvFile, header=True):
+def read_csvData(csvFile, noheader=True):
     with open(csvFile, 'r') as file:
             reader = csv.reader(file)
-            if header:
+            if noheader:
                 next(reader, None)
-            buffer_array = np.empty((0,4)) 
+            buffer_array = [] #np.empty((0,4)) 
             for line in reader:
-                floats = [float(e) for e in line]
-                buffer_array = np.append(buffer_array, np.array([floats]), axis=0)
-    return buffer_array
+                floats = np.fromiter([float(e) for e in line], float)
+                buffer_array.append(floats) #np.append(buffer_array, np.array([floats]), axis=0)
+    return np.asarray(buffer_array)
 
 def create_dict_HeadersAndData(headers, buffer_array):
     dict = {}
@@ -84,6 +84,7 @@ if __name__ == "__main__":
         start = time.perf_counter()
         headers = read_csvHeader('databuffer.csv')
         data =  read_csvData('databuffer.csv')
+        #print(data)
         plotstep_dict = create_dict_HeadersAndData(headers, data)
         stop = time.perf_counter()
         print(stop-start)
@@ -97,8 +98,9 @@ if __name__ == "__main__":
 
 
         # set data on line object
-        print(plot_arrays[0,-1])
-        print(plotstep_dict['aDataCounter'])
+
+        #print(plot_arrays[0,-1])
+        #print(plotstep_dict['aDataCounter'])
         print(np.isnan(plot_arrays[0,-1]))
 
 
