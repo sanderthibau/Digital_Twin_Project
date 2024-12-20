@@ -14,23 +14,25 @@ def save_buffercsv(sorted_buffer):
                 csvwriter.writerow([sorted_buffer[key][i] for key in sorted_buffer])
 
 
-def read_csvHeader(csvFile):
-    with open(csvFile, 'r') as file:
-          reader = csv.reader(file)
-          for row in reader:
-               headers = row
-               break
+def read_csvHeader(csvFile, lock):
+    with lock:
+        with open(csvFile, 'r') as file:
+            reader = csv.reader(file)
+            for row in reader:
+                headers = row
+                break
     return headers
 
-def read_csvData(csvFile, noheader=True):
-    with open(csvFile, 'r') as file:
-            reader = csv.reader(file)
-            if noheader:
-                next(reader, None)
-            buffer_array = [] #np.empty((0,4)) 
-            for line in reader:
-                floats = np.fromiter([float(e) for e in line], float)
-                buffer_array.append(floats) #np.append(buffer_array, np.array([floats]), axis=0)
+def read_csvData(csvFile, lock, noheader=True):
+    with lock:
+        with open(csvFile, 'r') as file:
+                reader = csv.reader(file)
+                if noheader:
+                    next(reader, None)
+                buffer_array = [] #np.empty((0,4)) 
+                for line in reader:
+                    floats = np.fromiter([float(e) for e in line], float)
+                    buffer_array.append(floats) #np.append(buffer_array, np.array([floats]), axis=0)
     return np.asarray(buffer_array)
 
 def create_dict_HeadersAndData(headers, buffer_array):
@@ -65,33 +67,21 @@ def initiate_plot(rows=2, cols=1, n_plot=101, labels=('aInputTorque','aSensorAng
          i += 1
     return fig, axs, lines, plot_arrays
 
-
-
-
-
-
-if __name__ == "__main__":
-
-    fig,axs,lines, plot_arrays=initiate_plot()
-
-    
-
-    def animate(iter, n_plot=101, n_step=10 , keys=('aInputTorque','aSensorAngle')):
+def animate(iter, lock, n_plot=101, n_step=10 , keys=('aInputTorque','aSensorAngle')):
         
+    # update data from data base
         
-        # update data from data base
-        
-        start = time.perf_counter()
-        headers = read_csvHeader('databuffer.csv')
-        data =  read_csvData('databuffer.csv')
-        #print(data)
-        plotstep_dict = create_dict_HeadersAndData(headers, data)
-        stop = time.perf_counter()
-        print(stop-start)
+    start = time.perf_counter()
+    headers = read_csvHeader('databuffer.csv', lock)
+    data =  read_csvData('databuffer.csv', lock)
+    #print(data)
+    plotstep_dict = create_dict_HeadersAndData(headers, data)
+    stop = time.perf_counter()
+    print(stop-start)
             
-        buffer_length = plotstep_dict['aTime'].shape[0]
-        step_amount = np.around(buffer_length/n_step)
-        print(step_amount)
+    buffer_length = plotstep_dict['aTime'].shape[0]
+    step_amount = np.around(buffer_length/n_step)
+    print(step_amount)
 
 
         
@@ -101,40 +91,59 @@ if __name__ == "__main__":
 
         #print(plot_arrays[0,-1])
         #print(plotstep_dict['aDataCounter'])
-        print(np.isnan(plot_arrays[0,-1]))
+    print(plot_arrays[0,:])
 
 
-        if plot_arrays[0,-1] != plotstep_dict['aDataCounter'][-1] or np.isnan(plot_arrays[0,-1]):
-            print('in')
-            plot_arrays[0,:] = np.concatenate((plot_arrays[0,:],plotstep_dict['aDataCounter']))[-n_plot:]
+    if plot_arrays[0,-1] != plotstep_dict['aDataCounter'][-1] or np.isnan(plot_arrays[0,-1]):
+        print('in')
+        plot_arrays[0,:] = np.concatenate((plot_arrays[0,:],plotstep_dict['aDataCounter']))[-n_plot:]
         
 
 
-            for i in range(len(lines)):
-                plot_arrays[i+1,:] = np.concatenate((plot_arrays[i+1,:],plotstep_dict[keys[i]]))[-n_plot:]
-                lines[i].set_data(plot_arrays[0,:], plot_arrays[i+1,:])
+        for i in range(len(lines)):
+            plot_arrays[i+1,:] = np.concatenate((plot_arrays[i+1,:],plotstep_dict[keys[i]]))[-n_plot:]
+            lines[i].set_data(plot_arrays[0,:], plot_arrays[i+1,:])
 
 
 
-            #lines[i].set_data(dict_data['aDataCounter'][-50:iter], dict_data[keys[i]][-50:iter])
+        #lines[i].set_data(dict_data['aDataCounter'][-50:iter], dict_data[keys[i]][-50:iter])
         
 
-        # rescale axes
-        rescale = False
+    # rescale axes
+    rescale = False
 
-        # for ax, y, t in zip(axs, ydata, tdata):
-        #      if y < ax.get_ylimit()[0]:
-        #           ax.set_limits(y, ax.get_limit()[1])
+    # for ax, y, t in zip(axs, ydata, tdata):
+    #      if y < ax.get_ylimit()[0]:
+    #           ax.set_limits(y, ax.get_limit()[1])
             
 
         
         
-        return lines
+    return lines    
+        
+def plot_figure(lock):
 
-
-
-    ani = animation.FuncAnimation(fig=fig, func=animate, blit=True, interval=1000, repeat=False)
+    ani = animation.FuncAnimation(fig=fig, func=animate, fargs=(lock,), blit=True, interval=1000, repeat=False)
     plt.show()
+
+
+     
+
+
+
+if __name__ == "__main__":
+    fig,axs,lines, plot_arrays=initiate_plot()
+    from multithreading_module import make_lock
+    lock = make_lock()
+    plot_figure(lock)
+
+    
+
+    
+
+
+
+    
 
 
     

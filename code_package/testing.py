@@ -70,4 +70,7 @@ if test_coondition:
 
     stop2 = time.perf_counter()
 
+    with True:
+        print('test')
+
     print(f'conditon time: {stop1-start} s, where time: {stop2-start} s, solution: {x}')

@@ -78,42 +78,49 @@ def put_array_chronologically(data_array, index_first, index_last):
     return sorted
 
 def select_useful_data(buffer_od, previous_counter):
-    counters = buffer_od['aDataCounter']
-    index_start = search_index_nextStep(counters, previous_counter)
-    index_end = search_index_lastStep(counters)
 
+    try:
+        counters = buffer_od['aDataCounter']
+        index_start = search_index_nextStep(counters, previous_counter)
+        index_end = search_index_lastStep(counters)
+    except:
+        print('\nError:\naDataCounter does not exist in TwinCat. A solution can be built by using the time array instead of counters.')
+        print('As previous_counter, the last timestep of incoming data should be saved in the loop to allow useful selection of data.\n')
     for varname, array in buffer_od.items():
         array_useful = put_array_chronologically(array, index_start, index_end)
         buffer_od[varname] = array_useful
     return buffer_od
 
 
-def start_new_database(database_file, sorted_buffer):
-    with open(database_file, "w", newline='') as outfile:
+def start_new_database(database_file, sorted_buffer, lock):
+    with lock:
+        with open(database_file, "w", newline='') as outfile:
             csvwriter = csv.writer(outfile)
             csvwriter.writerow(sorted_buffer)
 
 
 
-def write_to_database(database_file, sorted_buffer):
-    with open(database_file, "a", newline='') as outfile:
-        csvwriter = csv.writer(outfile)
-        len_buffer = len(sorted_buffer['aDataCounter'])
-        for i in range(len_buffer):
-            csvwriter.writerow([sorted_buffer[key][i] for key in sorted_buffer])
+def write_to_database(database_file, sorted_buffer, lock):
+    with lock:
+        with open(database_file, "a", newline='') as outfile:
+            csvwriter = csv.writer(outfile)
+            len_buffer = len(sorted_buffer['aDataCounter'])
+            for i in range(len_buffer):
+                csvwriter.writerow([sorted_buffer[key][i] for key in sorted_buffer])
     
 
-def write_buffer(buffer_file, sorted_buffer):
+def write_buffer(buffer_file, sorted_buffer, lock):
     
-    with open(buffer_file, "w", newline='') as outfile:
+    with lock:
+        with open(buffer_file, "w", newline='') as outfile:
         
-        csvwriter = csv.writer(outfile)
+            csvwriter = csv.writer(outfile)
         
-        csvwriter.writerow(sorted_buffer)
+            csvwriter.writerow(sorted_buffer)
         
-        len_buffer = len(sorted_buffer['aDataCounter'])
-        for i in range(len_buffer):
-            csvwriter.writerow([sorted_buffer[key][i] for key in sorted_buffer])
+            len_buffer = len(sorted_buffer['aDataCounter'])
+            for i in range(len_buffer):
+                csvwriter.writerow([sorted_buffer[key][i] for key in sorted_buffer])
 
     
     
@@ -121,6 +128,7 @@ def write_buffer(buffer_file, sorted_buffer):
 
 if __name__ == "__main__":
     print('running')
+    
 
 
     testing = 1
@@ -150,22 +158,25 @@ if __name__ == "__main__":
 
         
         
-        new_csv = 0
+        new_csv = 1
+
+        from multithreading_module import make_lock
+        lock = make_lock()
         if new_csv == 1:
-            start_new_database('database.csv', sorted_buffer)
+            start_new_database('database.csv', sorted_buffer, lock)
 
         start = time.perf_counter()
 
         write = 1
         if write == 1:
-            write_to_database('database.csv', sorted_buffer)
+            write_to_database('database.csv', sorted_buffer, lock)
         
         stop = time.perf_counter()
         print(stop-start)
 
         update_buffer = 1
         if update_buffer == 1:
-            write_buffer('databuffer.csv', sorted_buffer)
+            write_buffer('databuffer.csv', sorted_buffer, lock)
             
 
 
