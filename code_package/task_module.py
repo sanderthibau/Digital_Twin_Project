@@ -5,15 +5,20 @@ from ads_communication_module import read_twincat_structure,write_twincat_variab
 def fast_loop(period, event_f, lock, plc, fHandle):
     last_counter = 0
     while not event_f.wait(period):
+
         with lock:
+            
             buffer_dict = read_twincat_structure(plc)
             
         print(last_counter)
         sorted_buffer = select_useful_data(buffer_dict, last_counter)
-        last_counter = sorted_buffer['aDataCounter'][-1]
-        write_buffer('databuffer.csv', sorted_buffer)
         
-        print('fast')
+        last_counter = sorted_buffer['aDataCounter'][-1]
+        
+        write_buffer('databuffer.csv', sorted_buffer, lock)
+        
+        
+        print('fast loop')
         
 
         

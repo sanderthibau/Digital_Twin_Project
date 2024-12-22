@@ -45,7 +45,7 @@ def create_dict_HeadersAndData(headers, buffer_array):
 
 
 
-def initiate_plot(rows=2, cols=1, n_plot=101, labels=('aInputTorque','aSensorAngle'), ylabels=('Input [T]','Sensor [rad]'), ylimits=((-20,20),(-0.01, 0.31))):
+def initiate_plot(rows=2, cols=1, n_plot=500, labels=('aInputTorque','aSensorAngle'), ylabels=('Input [T]','Sensor [rad]'), ylimits=((-20,20),(-0.01, 0.31))):
     fig, axs = plt.subplots(nrows=rows, ncols=cols, layout='constrained')
     i = 0
     plot_arrays = np.full((len(labels)+1,n_plot), np.nan)
@@ -67,7 +67,7 @@ def initiate_plot(rows=2, cols=1, n_plot=101, labels=('aInputTorque','aSensorAng
          i += 1
     return fig, axs, lines, plot_arrays
 
-def animate(iter, lock, n_plot=101, n_step=10 , keys=('aInputTorque','aSensorAngle')):
+def animate(iter, lock, plot_arrays, lines, n_plot=500, n_step=10 , keys=('aInputTorque','aSensorAngle')):
         
     # update data from data base
         
@@ -77,11 +77,10 @@ def animate(iter, lock, n_plot=101, n_step=10 , keys=('aInputTorque','aSensorAng
     #print(data)
     plotstep_dict = create_dict_HeadersAndData(headers, data)
     stop = time.perf_counter()
-    print(stop-start)
+    #print(stop-start)
             
     buffer_length = plotstep_dict['aTime'].shape[0]
-    step_amount = np.around(buffer_length/n_step)
-    print(step_amount)
+    
 
 
         
@@ -91,11 +90,11 @@ def animate(iter, lock, n_plot=101, n_step=10 , keys=('aInputTorque','aSensorAng
 
         #print(plot_arrays[0,-1])
         #print(plotstep_dict['aDataCounter'])
-    print(plot_arrays[0,:])
+    #print(plot_arrays[0,:])
 
 
     if plot_arrays[0,-1] != plotstep_dict['aDataCounter'][-1] or np.isnan(plot_arrays[0,-1]):
-        print('in')
+        
         plot_arrays[0,:] = np.concatenate((plot_arrays[0,:],plotstep_dict['aDataCounter']))[-n_plot:]
         
 
@@ -124,7 +123,8 @@ def animate(iter, lock, n_plot=101, n_step=10 , keys=('aInputTorque','aSensorAng
 def plot_figure(lock):
 
     ani = animation.FuncAnimation(fig=fig, func=animate, fargs=(lock,), blit=True, interval=1000, repeat=False)
-    plt.show()
+    
+    return ani
 
 
      
@@ -135,7 +135,10 @@ if __name__ == "__main__":
     fig,axs,lines, plot_arrays=initiate_plot()
     from multithreading_module import make_lock
     lock = make_lock()
-    plot_figure(lock)
+    
+    animation = plot_figure(lock)
+    print('carry on bro')
+    
 
     
 

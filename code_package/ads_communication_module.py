@@ -37,6 +37,7 @@ def read_twincat_structure(plc, struct_name='Global.Buffer',
                                         ('aSensorAngle', pyads.PLCTYPE_REAL, BufferSize))):
     
     ordered_dictionary = plc.read_structure_by_name(struct_name, struct_def)
+    
     return ordered_dictionary
 
 def search_index_nextStep(data_counter, previous_counter, max_missing=1):
@@ -56,6 +57,7 @@ def search_index_nextStep(data_counter, previous_counter, max_missing=1):
             if data_counter[index] == previous_counter:
                 message = 'The buffer is not updated yet. No new values detected.'
             print(message)
+            #print(f'the index is: {index}')
         
     return index
 def search_index_lastStep(data_counter):
