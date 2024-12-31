@@ -1,11 +1,9 @@
-import threading
-import concurrent.futures
-import time
+
 import pyads
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
-from multithreading_module import make_pool, make_lock, make_event
+from multithreading_module import make_pool, make_lock, make_event, make_queue
 from task_module import fast_loop, slow_loop
 from csv_plot_module import plot_figure, initiate_plot, animate
 
@@ -18,6 +16,7 @@ if __name__ == "__main__":
     # Create event and lock object in threading
     stop_event = make_event()
     lock = make_lock()
+    queue = make_queue()
 
     # open connection to PLC
     plc = pyads.Connection(AMSNETID, pyads.PORT_TC3PLC1)
@@ -27,16 +26,18 @@ if __name__ == "__main__":
     #fHandle = plc.get_handle('MAIN.fArray')
     #tHandle = plc.get_handle('MAIN.tArray')
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
+    with make_pool(2) as pool:
 
-        pool.submit(fast_loop, 0.1, stop_event, lock, plc, "MAIN.iCounter")
+        pool.submit(fast_loop, 0.5, stop_event, lock, plc, queue, "MAIN.iCounter")
         pool.submit(slow_loop, 5, stop_event, lock, plc)
 
 
         fig,axs,lines, plot_arrays = initiate_plot()
-        lock = make_lock()
+        csv_lock = make_lock()
+
     
-        animation = animation.FuncAnimation(fig=fig, func=animate, fargs=(lock,plot_arrays,lines), blit=True, interval=10, repeat=False)
+        #plot_figure(fig, axs, lock, plot_arrays, lines, int=1000)
+        anim = animation.FuncAnimation(fig=fig, func=animate, fargs=(csv_lock,plot_arrays,lines,queue,False), blit=True, interval=500, repeat=False)
 
         def on_close(event):
             print("Stopping threads...")

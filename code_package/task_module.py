@@ -2,7 +2,7 @@
 from ads_communication_module import read_twincat_structure,write_twincat_variable, select_useful_data, write_buffer
 
 
-def fast_loop(period, event_f, lock, plc, fHandle):
+def fast_loop(period, event_f, lock, plc, queue, fHandle):
     last_counter = 0
     while not event_f.wait(period):
 
@@ -12,10 +12,11 @@ def fast_loop(period, event_f, lock, plc, fHandle):
             
         print(last_counter)
         sorted_buffer = select_useful_data(buffer_dict, last_counter)
+        queue.put(sorted_buffer)
         
         last_counter = sorted_buffer['aDataCounter'][-1]
         
-        write_buffer('databuffer.csv', sorted_buffer, lock)
+        #write_buffer('databuffer.csv', sorted_buffer, lock)
         
         
         print('fast loop')

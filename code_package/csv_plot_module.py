@@ -45,7 +45,7 @@ def create_dict_HeadersAndData(headers, buffer_array):
 
 
 
-def initiate_plot(rows=2, cols=1, n_plot=500, labels=('aInputTorque','aSensorAngle'), ylabels=('Input [T]','Sensor [rad]'), ylimits=((-20,20),(-0.01, 0.31))):
+def initiate_plot(rows=2, cols=1, n_plot=500, labels=('aInputTorque','aSensorAngle'), ylabels=('Input [T]','Sensor [rad]'), ylimits=((-20,30),(-0.01, 0.31))):
     fig, axs = plt.subplots(nrows=rows, ncols=cols, layout='constrained')
     i = 0
     plot_arrays = np.full((len(labels)+1,n_plot), np.nan)
@@ -67,19 +67,19 @@ def initiate_plot(rows=2, cols=1, n_plot=500, labels=('aInputTorque','aSensorAng
          i += 1
     return fig, axs, lines, plot_arrays
 
-def animate(iter, lock, plot_arrays, lines, n_plot=500, n_step=10 , keys=('aInputTorque','aSensorAngle')):
+def animate(iter, lock, plot_arrays, lines, queue, use_csv=True, n_plot=500, n_step=10 , keys=('aInputTorque','aSensorAngle')):
         
     # update data from data base
-        
-    start = time.perf_counter()
-    headers = read_csvHeader('databuffer.csv', lock)
-    data =  read_csvData('databuffer.csv', lock)
-    #print(data)
-    plotstep_dict = create_dict_HeadersAndData(headers, data)
-    stop = time.perf_counter()
-    #print(stop-start)
+    if use_csv:
+        start = time.perf_counter()
+        headers = read_csvHeader('databuffer.csv', lock)
+        data =  read_csvData('databuffer.csv', lock)
+        plotstep_dict = create_dict_HeadersAndData(headers, data)
+        stop = time.perf_counter()
+        print(stop-start)
             
-    buffer_length = plotstep_dict['aTime'].shape[0]
+    else:
+        plotstep_dict = queue.get()
     
 
 
@@ -111,20 +111,22 @@ def animate(iter, lock, plot_arrays, lines, n_plot=500, n_step=10 , keys=('aInpu
     # rescale axes
     rescale = False
 
-    # for ax, y, t in zip(axs, ydata, tdata):
-    #      if y < ax.get_ylimit()[0]:
-    #           ax.set_limits(y, ax.get_limit()[1])
+    for ax, y, in zip(axs, plot_arrays[1:,:]):
+         if y < ax.get_ylimit()[0]:
+              ax.set_limits(y, ax.get_limit()[1])
+
+
             
 
         
         
     return lines    
         
-def plot_figure(lock):
-
-    ani = animation.FuncAnimation(fig=fig, func=animate, fargs=(lock,), blit=True, interval=1000, repeat=False)
+def plot_figure(fig, axs, lock, plot_arrays, lines, int, queue, use_csv=True):
+    print(1)
+    animation.FuncAnimation(fig=fig, func=animate, fargs=(lock,plot_arrays,lines, queue, use_csv), blit=True, interval=int, repeat=False)
+    print(2)
     
-    return ani
 
 
      
@@ -135,8 +137,9 @@ if __name__ == "__main__":
     fig,axs,lines, plot_arrays=initiate_plot()
     from multithreading_module import make_lock
     lock = make_lock()
+
     
-    animation = plot_figure(lock)
+    animation = plot_figure(fig, axs, lock, plot_arrays, lines, 100)
     print('carry on bro')
     
 

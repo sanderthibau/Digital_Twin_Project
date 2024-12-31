@@ -70,7 +70,9 @@ if test_coondition:
 
     stop2 = time.perf_counter()
 
-    with True:
-        print('test')
+    
 
     print(f'conditon time: {stop1-start} s, where time: {stop2-start} s, solution: {x}')
+
+    arrays = np.array([[1,1,1],[2,2,2],[3,3,3]])
+    print([(a,b) for a,b in zip([1,2,3],arrays)])
