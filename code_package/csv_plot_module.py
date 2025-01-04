@@ -45,7 +45,7 @@ def create_dict_HeadersAndData(headers, buffer_array):
 
 
 
-def initiate_plot(rows=2, cols=1, n_plot=500, labels=('aInputTorque','aSensorAngle'), ylabels=('Input [T]','Sensor [rad]'), ylimits=((-20,30),(-0.01, 0.31))):
+def initiate_plot(rows=2, cols=1, n_plot=1000, labels=('aInputTorque','aSensorAngle'), ylabels=('Input [T]','Sensor [rad]'), ylimits=((-20,30),(-0.01, 0.31))):
     fig, axs = plt.subplots(nrows=rows, ncols=cols, layout='constrained')
     i = 0
     plot_arrays = np.full((len(labels)+1,n_plot), np.nan)
@@ -67,7 +67,7 @@ def initiate_plot(rows=2, cols=1, n_plot=500, labels=('aInputTorque','aSensorAng
          i += 1
     return fig, axs, lines, plot_arrays
 
-def animate(iter, lock, plot_arrays, lines, queue, use_csv=True, n_plot=500, n_step=10 , keys=('aInputTorque','aSensorAngle')):
+def animate(iter, lock, plot_arrays, lines, axs, fig, queue, use_csv=False, n_plot=1000, n_step=10 , keys=('aInputTorque','aSensorAngle')):
         
     # update data from data base
     if use_csv:
@@ -110,10 +110,43 @@ def animate(iter, lock, plot_arrays, lines, queue, use_csv=True, n_plot=500, n_s
 
     # rescale axes
     rescale = False
+    
 
-    for ax, y, in zip(axs, plot_arrays[1:,:]):
-         if y < ax.get_ylimit()[0]:
-              ax.set_limits(y, ax.get_limit()[1])
+    for ax, y in zip(axs, plot_arrays[1:,:]):
+         
+         
+         max_y = max(y) 
+         min_y = min(y)
+         range_y = max_y - min_y
+
+         ax_min = ax.get_ylim()[0]
+         ax_max = ax.get_ylim()[1]
+         range_ax = ax_max - ax_min
+
+         if max_y > ax_max - 0.1*range_ax:
+              print('change yy limit')
+              ax.set_ylim(min_y - 0.2*range_y, max_y + 0.4*range_y)
+              rescale = True
+
+         if min_y < ax_min + 0.1*range_ax:
+             
+             ax.set_ylim(min_y - 0.4*range_y, max_y + 0.2*range_y)
+             rescale = True
+
+         last_step = plot_arrays[0,-1]
+         if  last_step > ax.get_xlim()[1] - 50:
+             ax.set_xlim(last_step-300, last_step+750)
+             #rescale = True
+
+    if rescale:
+        fig.canvas.draw()
+        fig.canvas.flush_events()
+            
+        
+        
+        
+
+
 
 
             
@@ -124,7 +157,7 @@ def animate(iter, lock, plot_arrays, lines, queue, use_csv=True, n_plot=500, n_s
         
 def plot_figure(fig, axs, lock, plot_arrays, lines, int, queue, use_csv=True):
     print(1)
-    animation.FuncAnimation(fig=fig, func=animate, fargs=(lock,plot_arrays,lines, queue, use_csv), blit=True, interval=int, repeat=False)
+    animation.FuncAnimation(fig=fig, func=animate, fargs=(lock,plot_arrays,lines, axs, queue, use_csv), blit=True, interval=int, repeat=False)
     print(2)
     
 
@@ -139,7 +172,7 @@ if __name__ == "__main__":
     lock = make_lock()
 
     
-    animation = plot_figure(fig, axs, lock, plot_arrays, lines, 100)
+    #animation = plot_figure(fig, axs, lock, plot_arrays, lines, 100)
     print('carry on bro')
     
 

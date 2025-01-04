@@ -9,6 +9,10 @@ from csv_plot_module import plot_figure, initiate_plot, animate
 
 AMSNETID = "192.168.0.3.1.1"
 
+with open('simulate_model.py') as file:
+    exec(file.read())
+
+
 if __name__ == "__main__":
     # Code to execute when run as a script
     print('starting the digital twin')
@@ -28,16 +32,16 @@ if __name__ == "__main__":
 
     with make_pool(2) as pool:
 
-        pool.submit(fast_loop, 0.5, stop_event, lock, plc, queue, "MAIN.iCounter")
+        pool.submit(fast_loop, 1, stop_event, lock, plc, queue, "MAIN.iCounter")
         pool.submit(slow_loop, 5, stop_event, lock, plc)
 
 
-        fig,axs,lines, plot_arrays = initiate_plot()
+        fig,axs,lines,plot_arrays = initiate_plot()
         csv_lock = make_lock()
 
     
         #plot_figure(fig, axs, lock, plot_arrays, lines, int=1000)
-        anim = animation.FuncAnimation(fig=fig, func=animate, fargs=(csv_lock,plot_arrays,lines,queue,False), blit=True, interval=500, repeat=False)
+        anim = animation.FuncAnimation(fig=fig, func=animate, fargs=(csv_lock,plot_arrays,lines,axs, fig, queue,False), blit=True, interval=1000, repeat=False)
 
         def on_close(event):
             print("Stopping threads...")
