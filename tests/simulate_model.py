@@ -26,12 +26,12 @@ D = np.array([0])
 
 sysCR = ss(A,B,C,D)
 
-N = 4
+N = 2
 period = 0.01
 timesteps = np.linspace(0,period,N)
 
 
-inputs = 30 * np.ones(N)
+inputs = 0 * np.ones(N)
 
 def sys_response(ssys, timesteps_input, u_input, initial_state=[[0],[0],[0],[0]]):
 
@@ -52,7 +52,7 @@ if __name__ == "__main__":
     #reference_pos = 0.1
     iter = 0
     gain_P = 710
-    gain_D = 100
+    gain_D = 110
     max_input = 30
 
     pos_x = np.array(initial[0])
@@ -92,16 +92,38 @@ if __name__ == "__main__":
             inputs = np.concatenate((inputs[:-1], inputs_next))
 
         initial = x[:,-1]
+
+
+    stairs_down = 1
+
+    if stairs_down:
+        last_input = inputs[-1]
+        last_pos_x = pos_x[-1]
+        last_timestep = timesteps[-1]
+
+        inputs = np.concatenate((inputs, np.add(-inputs, last_input)))
+        pos_x = np.concatenate((pos_x, np.add(-pos_x, last_pos_x)))
+        timesteps = np.concatenate((timesteps, np.add(timesteps, last_timestep)))
+
+        amount_iterations *= 2
+
+
+
+
+
     print(f"Iteration took {time.time() - start_time} seconds")
-    total = 1 + (N-1)*amount_iterations
+    total = 1 + (N-1)*amount_iterations + stairs_down
     simtime = amount_iterations*period
     print(f"Total amount of timesteps = {total}, N = {N-1} (steps per iteration), Iterations = {amount_iterations}, Period [s]= {period}, Simulated time [s] = {simtime}")
     print(len(pos_x))
 
 
+    
+
+
     send_to_TC = 1
     
-    if send_to_TC == 1:
+    if send_to_TC:
 
         """
         In TwinCat:
@@ -153,8 +175,8 @@ if __name__ == "__main__":
 
     
     
-show_figures = 0
-if show_figures == 1:
+show_figures = 1
+if show_figures:
 
     plt.figure(1)
     plt.plot(timesteps,100* pos_x, label='position x [0.01 * m]')

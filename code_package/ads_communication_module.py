@@ -7,7 +7,7 @@ import csv
 
 
 AMSNETID = "192.168.0.3.1.1" #local netid
-BufferSize = 100
+BufferSize = 50
 
 def write_twincat_variable(var_name_TC, var_python, plc):
     #plc = pyads.Connection(AMSNETID, pyads.PORT_TC3PLC1)

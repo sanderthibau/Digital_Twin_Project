@@ -17,6 +17,6 @@ def make_event():
     print("event")
     return threading.Event()
 
-def make_queue(max_size=1000):
+def make_queue(max_size=100):
     print("queue")
     return Queue(max_size)

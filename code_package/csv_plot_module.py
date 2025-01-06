@@ -45,7 +45,7 @@ def create_dict_HeadersAndData(headers, buffer_array):
 
 
 
-def initiate_plot(rows=2, cols=1, n_plot=1000, labels=('aInputTorque','aSensorAngle'), ylabels=('Input [T]','Sensor [rad]'), ylimits=((-20,30),(-0.01, 0.31))):
+def initiate_plot(rows=2, cols=1, n_plot=1500, labels=('aInputTorque','aSensorAngle'), ylabels=('Input [T]','Sensor [rad]'), ylimits=((-20,30),(-0.01, 0.31))):
     fig, axs = plt.subplots(nrows=rows, ncols=cols, layout='constrained')
     i = 0
     plot_arrays = np.full((len(labels)+1,n_plot), np.nan)
@@ -59,7 +59,7 @@ def initiate_plot(rows=2, cols=1, n_plot=1000, labels=('aInputTorque','aSensorAn
          lines.append(line)
 
          ax.set_xlabel('Time [s]')
-         ax.set_xlim((0,1000))
+         ax.set_xlim((0,n_plot))
          ax.set_xticklabels([])
 
          ax.legend()
@@ -67,7 +67,7 @@ def initiate_plot(rows=2, cols=1, n_plot=1000, labels=('aInputTorque','aSensorAn
          i += 1
     return fig, axs, lines, plot_arrays
 
-def animate(iter, lock, plot_arrays, lines, axs, fig, queue, use_csv=False, n_plot=1000, n_step=10 , keys=('aInputTorque','aSensorAngle')):
+def animate(iter, lock, plot_arrays, lines, axs, fig, queue, use_csv=False, n_plot=1500, n_step=10 , keys=('aInputTorque','aSensorAngle')):
         
     # update data from data base
     if use_csv:
@@ -79,29 +79,23 @@ def animate(iter, lock, plot_arrays, lines, axs, fig, queue, use_csv=False, n_pl
         print(stop-start)
             
     else:
-        plotstep_dict = queue.get()
+        while not queue.empty():
+            plotstep_dict = queue.get()
     
 
 
-        
+
+            # set data on line object
+
+            if plot_arrays[0,-1] != plotstep_dict['aDataCounter'][-1] or np.isnan(plot_arrays[0,-1]):
+                
+                plot_arrays[0,:] = np.concatenate((plot_arrays[0,:],plotstep_dict['aDataCounter']))[-n_plot:]
+                
 
 
-        # set data on line object
-
-        #print(plot_arrays[0,-1])
-        #print(plotstep_dict['aDataCounter'])
-    #print(plot_arrays[0,:])
-
-
-    if plot_arrays[0,-1] != plotstep_dict['aDataCounter'][-1] or np.isnan(plot_arrays[0,-1]):
-        
-        plot_arrays[0,:] = np.concatenate((plot_arrays[0,:],plotstep_dict['aDataCounter']))[-n_plot:]
-        
-
-
-        for i in range(len(lines)):
-            plot_arrays[i+1,:] = np.concatenate((plot_arrays[i+1,:],plotstep_dict[keys[i]]))[-n_plot:]
-            lines[i].set_data(plot_arrays[0,:], plot_arrays[i+1,:])
+                for i in range(len(lines)):
+                    plot_arrays[i+1,:] = np.concatenate((plot_arrays[i+1,:],plotstep_dict[keys[i]]))[-n_plot:]
+                    lines[i].set_data(plot_arrays[0,:], plot_arrays[i+1,:])
 
 
 
@@ -114,28 +108,44 @@ def animate(iter, lock, plot_arrays, lines, axs, fig, queue, use_csv=False, n_pl
 
     for ax, y in zip(axs, plot_arrays[1:,:]):
          
+
+        max_y = np.nanmax(y[-round(n_plot*4/4):]) 
+        min_y = np.nanmin(y[-round(n_plot*4/4):])
+        range_y = max_y - min_y
+
+        ax_min = ax.get_ylim()[0]
+        ax_max = ax.get_ylim()[1]
+        range_ax = ax_max - ax_min
+
          
-         max_y = max(y) 
-         min_y = min(y)
-         range_y = max_y - min_y
 
-         ax_min = ax.get_ylim()[0]
-         ax_max = ax.get_ylim()[1]
-         range_ax = ax_max - ax_min
-
-         if max_y > ax_max - 0.1*range_ax:
-              print('change yy limit')
-              ax.set_ylim(min_y - 0.2*range_y, max_y + 0.4*range_y)
+        if max_y > ax_max - 0.05*range_ax:
+              ax_max = max_y + 0.4*range_y
+              #ax_min = min_y - 0.05*range_y
+              ax.set_ylim(ax_min, ax_max)
               rescale = True
 
-         if min_y < ax_min + 0.1*range_ax:
-             
-             ax.set_ylim(min_y - 0.4*range_y, max_y + 0.2*range_y)
+        if min_y < ax_min + 0.05*range_ax:
+             ax_min = min_y - 0.4*range_y
+             #ax_max = max_y + 0.05*range_y
+             ax.set_ylim(ax_min, ax_max)
              rescale = True
 
-         last_step = plot_arrays[0,-1]
-         if  last_step > ax.get_xlim()[1] - 50:
-             ax.set_xlim(last_step-300, last_step+750)
+        if min_y > ax_min + 0.1*range_ax:
+            ax_min = min_y - 0.05*range_y
+            #ax_max = max_y + 0.05*range_y
+            ax.set_ylim(ax_min, ax_max)
+            rescale = True
+
+        if max_y < ax_max - 0.1*range_ax:
+            ax_max = max_y + 0.05*range_y
+            #ax_min = min_y - 0.05*range_y
+            ax.set_ylim(ax_min, ax_max)
+            rescale = True
+
+        last_step = plot_arrays[0,-1]
+        if  last_step > ax.get_xlim()[1] - 1:
+             ax.set_xlim(last_step-round(n_plot/2), last_step+round(n_plot/2))
              #rescale = True
 
     if rescale:
