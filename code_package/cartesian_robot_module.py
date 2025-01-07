@@ -36,12 +36,13 @@ sysCR = ss(A,B,C,D)
 
 
 
-def sys_response(ssystem, timesteps_input, u_input, initial_state=[[0],[0],[0],[0]]):
+def sys_response(timesteps_input, u_input, initial_state=[[0],[0],[0],[0]]):
     """
     This function returns the output of a system (state space)
     given the inputs at certain timesteps and the initial condition
     """
-    time, yout, xout = ct.forced_response(ssystem, timesteps_input, u_input, initial_state, return_x=True)
+    
+    time, yout, xout = ct.forced_response(sysCR, timesteps_input, u_input, initial_state, return_x=True)
 
     return time, yout, xout
 
@@ -61,7 +62,7 @@ if __name__ == "__main__":
     v1 = t - 5
     fric = friction_feedforward(v)
     fric1  = friction_feedforward(v1)
-    x,xdot,phi,phidot = sys_response(sysCR, t, T)
+    x,xdot,phi,phidot = sys_response(t, T)
     print(x)
 
     #bode(sysCR)

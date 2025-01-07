@@ -94,6 +94,12 @@ def select_useful_data(buffer_od, previous_counter):
     return buffer_od
 
 
+def convert_100ns_steps(array, second=1):
+    if not isinstance(array, np.ndarray):
+        array = np.array(array)
+    array_conv = array / 10**7 / second
+    return array_conv
+
 def start_new_database(database_file, sorted_buffer, lock):
     with lock:
         with open(database_file, "w", newline='') as outfile:

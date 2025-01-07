@@ -40,7 +40,7 @@ if __name__ == "__main__":
 
     with make_pool(2) as pool:
 
-        pool.submit(fast_loop, 0.49, stop_event, lock, plc, queue_data, "MAIN.iCounter")
+        pool.submit(fast_loop, 0.99, stop_event, lock, plc, queue_data, queue_calculated)
         pool.submit(slow_loop, 5, stop_event, lock, plc)
 
 
@@ -49,7 +49,7 @@ if __name__ == "__main__":
 
     
         #plot_figure(fig, axs, lock, plot_arrays, lines, int=1000)
-        anim = animation.FuncAnimation(fig=fig, func=animate, fargs=(csv_lock,plot_arrays,lines,axs, fig, queue_data,False), blit=True, interval=500, repeat=False)
+        anim = animation.FuncAnimation(fig=fig, func=animate, fargs=(csv_lock,plot_arrays,lines,axs, fig, queue_data, queue_calculated, False), blit=True, interval=1000, repeat=False)
 
         def on_close(event):
             print("Stopping threads...")

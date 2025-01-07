@@ -45,7 +45,11 @@ def create_dict_HeadersAndData(headers, buffer_array):
 
 
 
-def initiate_plot(rows=2, cols=1, n_plot=1500, labels=('aInputTorque','aSensorAngle'), ylabels=('Input [T]','Sensor [rad]'), ylimits=((-20,30),(-0.01, 0.31))):
+def initiate_plot(rows=2, cols=1, n_plot=1500, 
+                  labels=('aInputTorque','aSensorAngle'), 
+                  ylabels=('Input [T]','Sensor [rad]'), 
+                  ylimits=((-20,30),(-0.01, 0.31))):
+    
     fig, axs = plt.subplots(nrows=rows, ncols=cols, layout='constrained')
     i = 0
     plot_arrays = np.full((len(labels)+1,n_plot), np.nan)
@@ -67,7 +71,7 @@ def initiate_plot(rows=2, cols=1, n_plot=1500, labels=('aInputTorque','aSensorAn
          i += 1
     return fig, axs, lines, plot_arrays
 
-def animate(iter, lock, plot_arrays, lines, axs, fig, queue, use_csv=False, n_plot=1500, n_step=10 , keys=('aInputTorque','aSensorAngle')):
+def animate(iter, lock, plot_arrays, lines, axs, fig, queue_data, queue_calculated, use_csv=False, n_plot=1500 , keys=('aInputTorque','aSensorAngle')):
         
     # update data from data base
     if use_csv:
@@ -79,8 +83,8 @@ def animate(iter, lock, plot_arrays, lines, axs, fig, queue, use_csv=False, n_pl
         print(stop-start)
             
     else:
-        while not queue.empty():
-            plotstep_dict = queue.get()
+        while not queue_data.empty():
+            plotstep_dict = queue_data.get()
     
 
 
@@ -145,7 +149,7 @@ def animate(iter, lock, plot_arrays, lines, axs, fig, queue, use_csv=False, n_pl
 
         last_step = plot_arrays[0,-1]
         if  last_step > ax.get_xlim()[1] - 1:
-             ax.set_xlim(last_step-round(n_plot/2), last_step+round(n_plot/2))
+             ax.set_xlim(last_step-round(n_plot*2/3), last_step+round(n_plot*1/3))
              #rescale = True
 
     if rescale:

@@ -55,8 +55,12 @@ if __name__ == "__main__":
     gain_D = 110
     max_input = 30
 
+    noise_sigma = 0.002
+    noise_mean = 0
+
     pos_x = np.array(initial[0])
     amount_iterations = 1000
+    buffer_size = 100
 
     D_BOOL = 1
 
@@ -68,7 +72,12 @@ if __name__ == "__main__":
         
         t, y, x = sys_response(sysCR, timesteps[-N:], inputs[-N:], initial)
 
-        pos_iter = x[0,1:] 
+
+        noise_pos = np.random.normal(noise_mean,noise_sigma, N-1)
+
+        pos_iter = np.add(x[0,1:], noise_pos)
+
+
         pos_x = np.concatenate((pos_x,pos_iter))
         error = pos_iter[-1] - reference_pos
 
@@ -145,10 +154,11 @@ if __name__ == "__main__":
         print(f"Connected?: {plc.is_open}") #debugging statement, optional
         print(f"Local Address? : {plc.get_local_address()}") #debugging statement, optional
 
+
         #write var
-        
         plc.write_by_name('MAIN.fInputArray', inputs, pyads.PLCTYPE_REAL * total)
         plc.write_by_name('MAIN.fSensorArray', pos_x, pyads.PLCTYPE_REAL * total)
+        
         
         #bool to let twincat wait on data
         plc.write_by_name('MAIN.data_received', True, pyads.PLCTYPE_BOOL)
