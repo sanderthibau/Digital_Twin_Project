@@ -10,6 +10,8 @@ def fast_loop(period, event_f, lock, plc, queue_data, queue_calculated, input_ke
 
     while not event_f.wait(period):
 
+        ##  READ FROM TWINCAT PART
+
         with lock:
             
             buffer_dict = read_twincat_structure(plc)
@@ -21,6 +23,9 @@ def fast_loop(period, event_f, lock, plc, queue_data, queue_calculated, input_ke
         last_counter = sorted_buffer['aDataCounter'][-1]
         
         #write_buffer('databuffer.csv', sorted_buffer, lock)
+        
+
+        # CALCULATE MODEL OUTPUT PART + ...
 
         """
         The first two columns of the buffer are the datacounter and time, then all other data follows.
@@ -31,13 +36,9 @@ def fast_loop(period, event_f, lock, plc, queue_data, queue_calculated, input_ke
         else:
             inputs = sorted_buffer[input_keys[0]]
 
-        #print(f'inputs are {inputs}')
+            
 
-        timesteps_inputs = convert_100ns_steps(sorted_buffer['aTime'])
-
-        #print(f'timesteps are {timesteps_inputs} sec')
-
-        #print(initial_state)
+        timesteps_inputs = sorted_buffer['aTime']
         
         try:
             outputs = model(sys_response, inputs, timesteps_inputs, initial_state)

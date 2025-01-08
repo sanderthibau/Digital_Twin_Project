@@ -80,7 +80,7 @@ def put_array_chronologically(data_array, index_first, index_last):
     return sorted
 
 def select_useful_data(buffer_od, previous_counter):
-
+    
     try:
         counters = buffer_od['aDataCounter']
         index_start = search_index_nextStep(counters, previous_counter)
@@ -90,14 +90,21 @@ def select_useful_data(buffer_od, previous_counter):
         print('As previous_counter, the last timestep of incoming data should be saved in the loop to allow useful selection of data.\n')
     for varname, array in buffer_od.items():
         array_useful = put_array_chronologically(array, index_start, index_end)
-        buffer_od[varname] = array_useful
+        if varname == 'aTime':
+            buffer_od[varname] = convert_100ns_steps(array_useful)
+        else:
+            buffer_od[varname] = array_useful
     return buffer_od
 
 
-def convert_100ns_steps(array, second=1):
+def convert_100ns_steps(array, sec=1):
+    """
+    In the time array read out from TwinCAT, one unit equals 100ns. This function converts the time array to one with a different unit.
+    The default unit is [1 second]: sec=1. If one wants to set the array in e.g. [ms], the sec parameter should be overwritten to sec=0.001.
+    """
     if not isinstance(array, np.ndarray):
         array = np.array(array)
-    array_conv = array / 10**7 / second
+    array_conv = array / 10**7 / sec
     return array_conv
 
 def start_new_database(database_file, sorted_buffer, lock):
