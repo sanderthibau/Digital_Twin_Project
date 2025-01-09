@@ -46,14 +46,16 @@ def create_dict_HeadersAndData(headers, buffer_array):
 
 
 def initiate_plot(rows=2, cols=1, n_plot=1500, 
-                  labels=('aInputTorque','aSensorAngle'), 
+                  labels=('aInputTorque','aSensorAngle'),                   
                   ylabels=('Input [T]','Sensor [rad]'), 
-                  ylimits=((-20,30),(-0.01, 0.31))):
+                  ylimits=((-20,30),(-0.01, 0.31)),
+                  outputs=('aSensorAngle')):
     
     fig, axs = plt.subplots(nrows=rows, ncols=cols, layout='constrained')
-    i = 0
+    
     plot_arrays = np.full((len(labels)+1,n_plot), np.nan)
     
+    i = 0
     lines = []
     for ax in axs:
          ax.set_ylabel(ylabels[i])
@@ -63,10 +65,12 @@ def initiate_plot(rows=2, cols=1, n_plot=1500,
          lines.append(line)
 
          ax.set_xlabel('Time [s]')
-         ax.set_xlim((0,n_plot))
-         ax.set_xticklabels([])
+         ax.set_xlim((0,n_plot/100))
+         #ax.set_xticklabels([])
 
          ax.legend()
+
+         ax.grid(animated=True)
 
          i += 1
     return fig, axs, lines, plot_arrays
@@ -91,9 +95,9 @@ def animate(iter, lock, plot_arrays, lines, axs, fig, queue_data, queue_calculat
 
             # set data on line object
 
-            if plot_arrays[0,-1] != plotstep_dict['aDataCounter'][-1] or np.isnan(plot_arrays[0,-1]):
+            if plot_arrays[0,-1] != plotstep_dict['aTime'][-1] or np.isnan(plot_arrays[0,-1]):
                 
-                plot_arrays[0,:] = np.concatenate((plot_arrays[0,:],plotstep_dict['aDataCounter']))[-n_plot:]
+                plot_arrays[0,:] = np.concatenate((plot_arrays[0,:],plotstep_dict['aTime']))[-n_plot:]
                 
 
 
@@ -149,7 +153,7 @@ def animate(iter, lock, plot_arrays, lines, axs, fig, queue_data, queue_calculat
 
         last_step = plot_arrays[0,-1]
         if  last_step > ax.get_xlim()[1] - 1:
-             ax.set_xlim(last_step-round(n_plot*2/3), last_step+round(n_plot*1/3))
+             ax.set_xlim(last_step-round(n_plot/100*2/3), last_step+round(n_plot/100*1/3))
              #rescale = True
 
     if rescale:

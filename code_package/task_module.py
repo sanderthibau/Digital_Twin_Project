@@ -4,7 +4,7 @@ from model_module import model
 from cartesian_robot_module import sys_response
 
 
-def fast_loop(period, event_f, lock, plc, queue_data, queue_calculated, input_keys=['aInputTorque']):
+def fast_loop(period, event_f, lock, plc, queue_data, queue_calculated, BufferSize=50, input_keys=['aInputTorque']):
     last_counter = 0
     initial_state = [[0],[0],[0],[0]] #only for basic/ easy start, should be more advanced with a first read
 
@@ -14,7 +14,7 @@ def fast_loop(period, event_f, lock, plc, queue_data, queue_calculated, input_ke
 
         with lock:
             
-            buffer_dict = read_twincat_structure(plc)
+            buffer_dict = read_twincat_structure(plc, BufferSize)
             
         
         sorted_buffer = select_useful_data(buffer_dict, last_counter)
@@ -43,10 +43,11 @@ def fast_loop(period, event_f, lock, plc, queue_data, queue_calculated, input_ke
         try:
             outputs = model(sys_response, inputs, timesteps_inputs, initial_state)
             queue_calculated.put(outputs)
+            initial_state = outputs[:,-1]
 
         except:
             print("Problem with model calculation, probably no new values detected")
-        initial_state = outputs[:,-1]
+        
 
 
 

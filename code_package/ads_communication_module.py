@@ -6,8 +6,7 @@ import csv
 
 
 
-AMSNETID = "192.168.0.3.1.1" #local netid
-BufferSize = 50
+
 
 def write_twincat_variable(var_name_TC, var_python, plc):
     #plc = pyads.Connection(AMSNETID, pyads.PORT_TC3PLC1)
@@ -30,12 +29,19 @@ def read_twincat_variable(var_name, plc):
     #plc.close()
     return varTC
 
-def read_twincat_structure(plc, struct_name='Global.Buffer',
-                           struct_def=(('aDataCounter', pyads.PLCTYPE_UDINT, BufferSize),
-                                        ('aTime', pyads.PLCTYPE_ULINT, BufferSize),
-                                        ('aInputTorque', pyads.PLCTYPE_REAL, BufferSize),
-                                        ('aSensorAngle', pyads.PLCTYPE_REAL, BufferSize))):
-    
+def read_twincat_structure(plc, BufferSize, struct_name='Global.Buffer', var_names=('aDataCounter','aTime','aInputTorque','aSensorAngle'), 
+                            PLCtypes=(pyads.PLCTYPE_UDINT, pyads.PLCTYPE_ULINT,pyads.PLCTYPE_REAL,pyads.PLCTYPE_REAL)):
+    """
+    Allows to read a structure from TwinCAT online as an ordered dictionary.
+    The TC structure should be implemented as follows:
+
+    struct_def=(('aDataCounter', pyads.PLCTYPE_UDINT, BufferSize),
+                ('aTime', pyads.PLCTYPE_ULINT, BufferSize),
+                ('aInputTorque', pyads.PLCTYPE_REAL, BufferSize),
+                ('aSensorAngle', pyads.PLCTYPE_REAL, BufferSize))):
+    """
+    struct_def = tuple((var_name,PLCtype, BufferSize) for var_name, PLCtype in zip(var_names, PLCtypes))
+
     ordered_dictionary = plc.read_structure_by_name(struct_name, struct_def)
     
     return ordered_dictionary
@@ -143,7 +149,7 @@ def write_buffer(buffer_file, sorted_buffer, lock):
 
 if __name__ == "__main__":
     print('running')
-    
+    AMSNETID = "192.168.0.3.1.1" #local netid
 
 
     testing = 1
@@ -153,7 +159,7 @@ if __name__ == "__main__":
         plc = pyads.Connection(AMSNETID, pyads.PORT_TC3PLC1)
         plc.open()
         start = time.perf_counter()
-        buffer_od = read_twincat_structure(plc)
+        buffer_od = read_twincat_structure(plc, 50)
         stop = time.perf_counter()
         plc.close()
         
@@ -173,7 +179,7 @@ if __name__ == "__main__":
 
         
         
-        new_csv = 1
+        new_csv = 0
 
         from multithreading_module import make_lock
         lock = make_lock()
@@ -182,14 +188,14 @@ if __name__ == "__main__":
 
         start = time.perf_counter()
 
-        write = 1
+        write = 0
         if write == 1:
             write_to_database('database.csv', sorted_buffer, lock)
         
         stop = time.perf_counter()
         print(stop-start)
 
-        update_buffer = 1
+        update_buffer = 0
         if update_buffer == 1:
             write_buffer('databuffer.csv', sorted_buffer, lock)
             

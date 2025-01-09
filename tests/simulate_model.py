@@ -185,7 +185,8 @@ if __name__ == "__main__":
 
     
     
-show_figures = 1
+show_figures = 0
+block_figure = True
 if show_figures:
 
     plt.figure(1)
@@ -193,7 +194,7 @@ if show_figures:
     plt.plot(timesteps, inputs, label='input T [Nm]')
     plt.xlabel('time [s]')
     plt.legend()
-    plt.show()   
+    plt.show(block=block_figure)   
 
 
     
