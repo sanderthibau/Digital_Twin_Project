@@ -49,65 +49,92 @@ def initiate_plot(rows=2, cols=1, n_plot=1500,
                   labels=('aInputTorque','aSensorAngle'),                   
                   ylabels=('Input [T]','Sensor [rad]'), 
                   ylimits=((-20,30),(-0.01, 0.31)),
-                  outputs=('aSensorAngle')):
+                  outputs=('aSensorAngle',)):
+    
+    """
+    This prepares the figure and the axes to be updated by the animate function.
+    If a parameter is a tuple an it consistsof only 1 element,
+    write:       ('element',)
+    to make sure it is seen as a tuple, because ('element') may be seen as a string.
+    
+    """
     
     fig, axs = plt.subplots(nrows=rows, ncols=cols, layout='constrained')
     
     plot_arrays = np.full((len(labels)+1,n_plot), np.nan)
+    calculated_arrays = np.full((len(outputs)+1,n_plot), np.nan)
+    
     
     i = 0
     lines = []
+    lines_calculated = []
     for ax in axs:
-         ax.set_ylabel(ylabels[i])
-         ax.set_ylim(ylimits[i])
-         
-         line, = ax.plot([], [], label=labels[i])
-         lines.append(line)
+        line, = ax.plot([], [], label=labels[i])
+        lines.append(line)
 
-         ax.set_xlabel('Time [s]')
-         ax.set_xlim((0,n_plot/100))
-         #ax.set_xticklabels([])
+        if labels[i] in outputs:
+            print()
+            line_calc, = ax.plot([],[], label='Model output')
+            lines_calculated.append(line_calc)
 
-         ax.legend()
 
-         ax.grid(animated=True)
+        ax.set_ylabel(ylabels[i])
+        ax.set_ylim(ylimits[i])
+        ax.set_xlabel('Time [s]')
+        ax.set_xlim((0,n_plot/100))
+        #ax.set_xticklabels([])
 
-         i += 1
-    return fig, axs, lines, plot_arrays
+        ax.legend()
 
-def animate(iter, lock, plot_arrays, lines, axs, fig, queue_data, queue_calculated, use_csv=False, n_plot=1500 , keys=('aInputTorque','aSensorAngle')):
+        ax.grid(animated=True)
+
+        i += 1
+    return fig, axs, lines, lines_calculated, plot_arrays, calculated_arrays
+
+def animate(iter, lock, plot_arrays, lines, calculated_arrays, lines_calculated, axs, fig, queue_data, queue_calculated, use_csv=False, n_plot=1500 ,
+            keys=('aInputTorque','aSensorAngle')):
         
     # update data from data base
-    if use_csv:
-        start = time.perf_counter()
-        headers = read_csvHeader('databuffer.csv', lock)
-        data =  read_csvData('databuffer.csv', lock)
-        plotstep_dict = create_dict_HeadersAndData(headers, data)
-        stop = time.perf_counter()
-        print(stop-start)
+        # if use_csv:
+        #     start = time.perf_counter()
+        #     headers = read_csvHeader('databuffer.csv', lock)
+        #     data =  read_csvData('databuffer.csv', lock)
+        #     plotstep_dict = create_dict_HeadersAndData(headers, data)
+        #     stop = time.perf_counter()
+        #     print(stop-start)
+                
+        # else:
+
+    while not queue_data.empty():
+        plotstep_dict = queue_data.get()
+
+        # set data on line object
+
+        if plot_arrays[0,-1] != plotstep_dict['aTime'][-1] or np.isnan(plot_arrays[0,-1]):
             
-    else:
-        while not queue_data.empty():
-            plotstep_dict = queue_data.get()
-    
+            plot_arrays[0,:] = np.concatenate((plot_arrays[0,:],plotstep_dict['aTime']))[-n_plot:]
 
-
-
-            # set data on line object
-
-            if plot_arrays[0,-1] != plotstep_dict['aTime'][-1] or np.isnan(plot_arrays[0,-1]):
+            for i in range(len(keys)):
+                plot_arrays[i+1,:] = np.concatenate((plot_arrays[i+1,:],plotstep_dict[keys[i]]))[-n_plot:]
                 
-                plot_arrays[0,:] = np.concatenate((plot_arrays[0,:],plotstep_dict['aTime']))[-n_plot:]
+                lines[i].set_data(plot_arrays[0,:], plot_arrays[i+1,:])
+
+    while not queue_calculated.empty():
+
+        calculated_step = queue_calculated.get()
+        
+
+        if calculated_arrays[0,-1] != calculated_step[0][-1] or np.isnan(calculated_arrays[0,-1]):
+            
+
+            calculated_arrays[0,:] = np.concatenate((calculated_arrays[0,:], calculated_step[0]))[-n_plot:]
+        
+            for i in range(len(lines_calculated)):
+                calculated_arrays[i+1,:] = np.concatenate((calculated_arrays[i+1,:], calculated_step[i+1]))[-n_plot:]
                 
+                lines_calculated[i].set_data(calculated_arrays[0,:], calculated_arrays[i+1,:])
 
-
-                for i in range(len(lines)):
-                    plot_arrays[i+1,:] = np.concatenate((plot_arrays[i+1,:],plotstep_dict[keys[i]]))[-n_plot:]
-                    lines[i].set_data(plot_arrays[0,:], plot_arrays[i+1,:])
-
-
-
-        #lines[i].set_data(dict_data['aDataCounter'][-50:iter], dict_data[keys[i]][-50:iter])
+    #lines[i].set_data(dict_data['aDataCounter'][-50:iter], dict_data[keys[i]][-50:iter])
         
 
     # rescale axes
@@ -162,16 +189,11 @@ def animate(iter, lock, plot_arrays, lines, axs, fig, queue_data, queue_calculat
             
         
         
-        
-
-
-
-
-            
+    
 
         
         
-    return lines    
+    return lines_calculated
         
 def plot_figure(fig, axs, lock, plot_arrays, lines, int, queue, use_csv=True):
     print(1)
@@ -185,11 +207,11 @@ def plot_figure(fig, axs, lock, plot_arrays, lines, int, queue, use_csv=True):
 
 
 if __name__ == "__main__":
-    fig,axs,lines, plot_arrays=initiate_plot()
+    fig,axs,lines, lines_calc, plot_arrays, calc_array=initiate_plot()
     from multithreading_module import make_lock
     lock = make_lock()
 
-    
+    fig,axs,lines,lines_calculated,plot_arrays,calculated_arrays = initiate_plot()
     #animation = plot_figure(fig, axs, lock, plot_arrays, lines, 100)
     print('carry on bro')
     

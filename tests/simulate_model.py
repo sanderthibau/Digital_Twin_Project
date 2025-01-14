@@ -31,6 +31,7 @@ period = 0.01
 timesteps = np.linspace(0,period,N)
 
 
+
 inputs = 0 * np.ones(N)
 
 def sys_response(ssys, timesteps_input, u_input, initial_state=[[0],[0],[0],[0]]):
@@ -55,7 +56,7 @@ if __name__ == "__main__":
     gain_D = 110
     max_input = 30
 
-    noise_sigma = 0.002
+    noise_sigma = 0.001
     noise_mean = 0
 
     pos_x = np.array(initial[0])
@@ -102,18 +103,58 @@ if __name__ == "__main__":
 
         initial = x[:,-1]
 
-
     stairs_down = 1
 
     if stairs_down:
-        last_input = inputs[-1]
-        last_pos_x = pos_x[-1]
-        last_timestep = timesteps[-1]
+        # last_input = inputs[-1]
+        # last_pos_x = pos_x[-1]
+        # last_timestep = timesteps[-1]
 
-        inputs = np.concatenate((inputs, np.add(-inputs, last_input)))
-        pos_x = np.concatenate((pos_x, np.add(-pos_x, last_pos_x)))
-        timesteps = np.concatenate((timesteps, np.add(timesteps, last_timestep)))
+        # inputs = np.concatenate((inputs, np.add(-inputs, last_input)))
+        # pos_x = np.concatenate((pos_x, np.add(-pos_x, last_pos_x)))
+        # timesteps = np.concatenate((timesteps, np.add(timesteps, last_timestep)))
+        iter = 0
+        while iter < amount_iterations:
+            iter += 1
 
+            reference_pos =  1 - 0.1 * math.ceil(10*iter/amount_iterations)
+            
+            t, y, x = sys_response(sysCR, timesteps[-N:], inputs[-N:], initial)
+
+
+            noise_pos = np.random.normal(noise_mean,noise_sigma, N-1)
+
+            pos_iter = np.add(x[0,1:], noise_pos)
+
+
+            pos_x = np.concatenate((pos_x,pos_iter))
+            error = pos_iter[-1] - reference_pos
+
+            next_input = -gain_P * error
+
+            inputs_next = next_input * np.ones(N)
+
+            if D_BOOL:
+                velocity_end_iter = x[2,-1]
+                
+                inputs_next = np.add(inputs_next, -gain_D*velocity_end_iter)
+            
+            timesteps_next = np.add(timesteps[-(N-1):], period)
+
+            timesteps = np.concatenate((timesteps, timesteps_next))
+            inputs_next = np.sign(inputs_next[0]) * min(abs(inputs_next[0]), max_input) * np.ones_like(inputs_next)
+
+            inputs = np.concatenate((inputs[:-1], inputs_next))
+            if iter < amount_iterations:
+                pass
+                
+                
+
+                
+
+            initial = x[:,-1]
+
+    
         amount_iterations *= 2
 
 
@@ -121,10 +162,10 @@ if __name__ == "__main__":
 
 
     print(f"Iteration took {time.time() - start_time} seconds")
-    total = 1 + (N-1)*amount_iterations + stairs_down
+    total = 1 + (N-1)*amount_iterations
     simtime = amount_iterations*period
     print(f"Total amount of timesteps = {total}, N = {N-1} (steps per iteration), Iterations = {amount_iterations}, Period [s]= {period}, Simulated time [s] = {simtime}")
-    print(len(pos_x))
+
 
 
     

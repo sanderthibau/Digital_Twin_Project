@@ -11,7 +11,7 @@ J = 0.05
 R = 0.0098
 bs = 50
 fric_x = 0.1
-fric_T = 0.1
+fric_T = 0.01
 
 
 # A = [[0,0,1,0], [-K/m, -(bs+fric_x)/m, K*R/m, bs*R/m], [0,0,0,1], [K*R/J,bs*R/J, -K*R*R/J,-(bs*R*R+fric_T)/J]]
@@ -28,7 +28,7 @@ A = np.array([[0,0,1,0], [0,0,0,1], [-K/m, K*R/m, -fric_x/m, 0], [K*R/J, -K*R*R/
 
 B = np.array([[0],[0],[0],[1/J]])
 
-C = np.array([0,1,0,0])
+C = np.array([1,0,0,0])
 
 D = np.array([0])
 

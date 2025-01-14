@@ -36,14 +36,19 @@ def fast_loop(period, event_f, lock, plc, queue_data, queue_calculated, BufferSi
         else:
             inputs = sorted_buffer[input_keys[0]]
 
-            
 
         timesteps_inputs = sorted_buffer['aTime']
         
         try:
-            outputs = model(sys_response, inputs, timesteps_inputs, initial_state)
-            queue_calculated.put(outputs)
+            
+            t, y, outputs = model(sys_response, inputs, timesteps_inputs, initial_state)
+            output_tuple = (t, y)
+            
+
+
+            queue_calculated.put(output_tuple)
             initial_state = outputs[:,-1]
+            
 
         except:
             print("Problem with model calculation, probably no new values detected")
