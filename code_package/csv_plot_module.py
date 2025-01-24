@@ -154,8 +154,8 @@ def animate(iter, lock, plot_arrays, lines, calculated_arrays, lines_calculated,
 
          
 
-        if max_y > ax_max - 0.05*range_ax:
-              ax_max = max_y + 0.4*range_y
+        if max_y > ax_max - 0.1*range_ax:
+              ax_max = max_y + 1*range_y
               #ax_min = min_y - 0.05*range_y
               ax.set_ylim(ax_min, ax_max)
               rescale = True
@@ -229,7 +229,7 @@ if __name__ == "__main__":
     
     
     
-    testing = 0
+    testing = 1
     if testing == 1:
 
         filename = 'database.csv'
