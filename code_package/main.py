@@ -38,8 +38,8 @@ if __name__ == "__main__":
     # Gain time by using a fixed handle for frequently used variables
     #fHandle = plc.get_handle('MAIN.fArray')
     #tHandle = plc.get_handle('MAIN.tArray')
-
-    with make_pool(2) as pool:
+    pool = make_pool(2)
+    with pool:
 
         pool.submit(fast_loop, 0.49, stop_event, lock, plc, queue_data, queue_calculated, BufferSize)
         pool.submit(slow_loop, 5, stop_event, lock, plc)
@@ -48,10 +48,10 @@ if __name__ == "__main__":
         fig,axs,lines,lines_calculated,plot_arrays,calculated_arrays = initiate_plot()
         csv_lock = make_lock()
 
-    
+
         #plot_figure(fig, axs, lock, plot_arrays, lines, int=1000)
         anim = animation.FuncAnimation(fig=fig, func=animate, fargs=(csv_lock, plot_arrays, lines, calculated_arrays, lines_calculated,
-                                                                     axs, fig, queue_data, queue_calculated, False), blit=True, interval=500, repeat=False)
+                                                                        axs, fig, queue_data, queue_calculated, False), blit=True, interval=500, repeat=False)
         
         # FFwriter = animation.FFMpegWriter(fps=10)
         # anim.save('plot_animation.mp4', writer = FFwriter)

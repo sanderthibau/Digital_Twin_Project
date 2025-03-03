@@ -63,8 +63,6 @@ def fast_loop(period, event_f, lock, plc, queue_data, queue_calculated, BufferSi
         
 
         
-        
-
 
 
 def slow_loop(period, event_s, lock, plc):
