@@ -41,7 +41,7 @@ if __name__ == "__main__":
     pool = make_pool(2)
     with pool:
 
-        pool.submit(fast_loop, 0.49, stop_event, lock, plc, queue_data, queue_calculated, BufferSize)
+        pool.submit(fast_loop, 0.4, stop_event, lock, plc, queue_data, queue_calculated, BufferSize)
         pool.submit(slow_loop, 5, stop_event, lock, plc)
 
 

@@ -8,13 +8,30 @@ plt.rcParams['mathtext.fontset'] = 'cm'
 rcParams['axes.unicode_minus'] = False
 rcParams['axes.formatter.use_mathtext'] = True
 
-transfer_times = np.load('transfer_times.npz')
-read_time = transfer_times['TimeRead']
-put_time = transfer_times['TimePut']*10**-9
-get_time = transfer_times['TimeGet']*10**-9
 
 parameters = np.load('parameters.npz')
 DataSizes = parameters['DataSizes']
+
+types = ['multiprocessing', 'multithreading', 'manager_queue']
+
+
+
+indicator = 0
+type = types[indicator]
+
+struc = 1
+if struc:
+    type = type+'_struct'
+
+load = 1
+if load:
+    type = 'L_'+ type
+print(type)
+
+transfer_times = np.load('transfer_times'+f'_{type}'+'.npz')
+read_time = transfer_times['TimeRead']
+put_time = transfer_times['TimePut']*10**-9
+get_time = np.load('get_times'+f'_{type}'+'.npy')*10**-9
 
 #print(transfer_time)
 plt.figure(1)

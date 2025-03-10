@@ -3,3 +3,7 @@ __pycache__/
 *$py.class
 /.venv
 *.csv
+
+# Ignore NumPy binary files
+*.npz
+*.npy

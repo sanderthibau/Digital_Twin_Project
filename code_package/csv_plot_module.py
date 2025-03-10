@@ -120,6 +120,7 @@ def animate(iter, lock, plot_arrays, lines, calculated_arrays, lines_calculated,
                 lines[i].set_data(plot_arrays[0,:], plot_arrays[i+1,:])
 
     while not queue_calculated.empty():
+        #print('in model')
 
         calculated_step = queue_calculated.get()
         

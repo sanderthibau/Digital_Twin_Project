@@ -65,9 +65,9 @@ t_r = len(timestep_range)
 d_r = len(duration_range)
 
 
-plot_duration = 0
-plot_percentage = 0
-plot_states = 0
+plot_duration = 1
+plot_percentage = 1
+plot_states = 1
 contours = 1
 
 ## PLOTS CALCULATION TIME as function of SIMULATED TIME (duration)
